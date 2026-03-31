@@ -28,6 +28,29 @@ Trong `astro.config.mjs`, adapter Cloudflare **tắt khi `npm run dev`** để K
 
 Sau khi đổi nội dung: `npm run build`, rồi `npm run deploy` (hoặc `wrangler deploy`) như trước.
 
+## Tao lai Worker (de nghi)
+
+Neu ban xoa worker hien tai, hay tao lai bang Wrangler thay vi dashboard Git deploy:
+
+1. `npm install`
+2. `npx wrangler login`
+3. `npm run deploy`
+
+Script deploy dung config do Astro tao ra: `dist/server/wrangler.json`.
+
+### Keystatic tren production (GitHub mode)
+
+De `/keystatic` hoat dong khi deploy worker, set cac bien moi truong tren Cloudflare Worker:
+
+- `KEYSTATIC_STORAGE_KIND=github`
+- `KEYSTATIC_GITHUB_REPO=jeunet0nas/astro-workers`
+- `KEYSTATIC_GITHUB_CLIENT_ID=...`
+- `KEYSTATIC_GITHUB_CLIENT_SECRET=...`
+- `KEYSTATIC_SECRET=...`
+- `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG=...`
+
+Khong commit cac gia tri secret vao repo.
+
 ## Ghi chú
 
 - `@keystatic/astro` khai báo peer `astro@2–5`; dự án dùng Astro 6 nên repo có `.npmrc` với `legacy-peer-deps=true` để cài dependency ổn định. Nếu có bản Keystatic hỗ trợ Astro 6 chính thức, có thể bỏ cài đặt này.

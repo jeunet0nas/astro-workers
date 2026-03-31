@@ -10,8 +10,27 @@ const pageImageOpts = {
 	publicPath: '../../assets/images/pages/',
 };
 
+const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
+	?.env ?? { KEYSTATIC_STORAGE_KIND: 'local' };
+
+const storageKind = env.KEYSTATIC_STORAGE_KIND ?? 'local';
+const githubRepo = env.KEYSTATIC_GITHUB_REPO;
+const githubBranchPrefix = env.KEYSTATIC_GITHUB_BRANCH_PREFIX;
+const [repoOwner = 'jeunet0nas', repoName = 'astro-workers'] = (
+	githubRepo ?? 'jeunet0nas/astro-workers'
+).split('/');
+
+const storage =
+	storageKind === 'github'
+		? {
+				kind: 'github' as const,
+				repo: { owner: repoOwner, name: repoName },
+				...(githubBranchPrefix ? { branchPrefix: githubBranchPrefix } : {}),
+			}
+		: { kind: 'local' as const };
+
 export default config({
-	storage: { kind: 'local' },
+	storage,
 	collections: {
 		posts: collection({
 			label: 'Blog posts',
