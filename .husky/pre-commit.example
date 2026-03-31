@@ -1,0 +1,32 @@
+#!/bin/bash
+# Security check script - run before committing
+
+echo "🔐 Running security checks..."
+
+# Check if .env files are being committed
+if git diff --cached --name-only | grep -E "^\.env$|^\.dev\.vars$" > /dev/null; then
+    echo "❌ ERROR: Attempting to commit sensitive files (.env or .dev.vars)"
+    echo "   These files contain secrets and should NEVER be committed!"
+    echo "   Run: git reset HEAD .env .dev.vars"
+    exit 1
+fi
+
+# Check for potential secrets in staged files
+if git diff --cached | grep -iE "(client_secret|api_key|password|secret.*=.*[a-f0-9]{32})" > /dev/null; then
+    echo "⚠️  WARNING: Potential secrets detected in staged changes"
+    echo "   Review your changes carefully before committing"
+    echo "   If you're sure it's safe, commit with --no-verify"
+    exit 1
+fi
+
+# Check that example files exist
+if [ ! -f .env.example ]; then
+    echo "⚠️  WARNING: .env.example not found"
+fi
+
+if [ ! -f .dev.vars.example ]; then
+    echo "⚠️  WARNING: .dev.vars.example not found"
+fi
+
+echo "✅ Security checks passed"
+exit 0

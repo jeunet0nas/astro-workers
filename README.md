@@ -2,10 +2,25 @@
 
 Astro 6, Cloudflare Workers adapter, blog và trang tĩnh qua [Keystatic](https://keystatic.com/).
 
+## ⚠️ Bảo mật quan trọng
+
+**Trước khi bắt đầu, đọc [SECURITY.md](./SECURITY.md) để thiết lập đúng credentials!**
+
+- ❌ **KHÔNG BAO GIỜ** commit file `.env` hoặc `.dev.vars`
+- ✅ Sử dụng `.env.example` và `.dev.vars.example` làm template
+- ✅ Generate secret mới: `openssl rand -hex 32`
+
 ## Chạy local
 
 ```sh
+# 1. Cài đặt dependencies
 npm install
+
+# 2. Thiết lập environment variables
+cp .env.example .env
+# Chỉnh sửa .env với giá trị thực của bạn
+
+# 3. Chạy dev server
 npm run dev
 ```
 

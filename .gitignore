@@ -13,9 +13,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# environment variables
+# environment variables (NEVER commit these!)
 .env
+.env.*
+!.env.example
 .env.production
+.dev.vars
+!.dev.vars.example
 
 # macOS-specific files
 .DS_Store

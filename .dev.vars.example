@@ -1,0 +1,11 @@
+# Example .dev.vars for Wrangler local development
+# Copy this to .dev.vars and fill in your actual values
+# .dev.vars is gitignored and will NOT be committed
+
+# Required only when KEYSTATIC_STORAGE_KIND=github
+KEYSTATIC_GITHUB_CLIENT_ID=your_client_id_here
+KEYSTATIC_GITHUB_CLIENT_SECRET=your_client_secret_here
+KEYSTATIC_SECRET=your_random_secret_here
+PUBLIC_KEYSTATIC_GITHUB_APP_SLUG=your-app-slug
+KEYSTATIC_GITHUB_REPO=your-username/your-repo
+KEYSTATIC_STORAGE_KIND=github

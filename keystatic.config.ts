@@ -16,9 +16,16 @@ const env = (globalThis as { process?: { env?: Record<string, string | undefined
 const storageKind = env.KEYSTATIC_STORAGE_KIND ?? 'local';
 const githubRepo = env.KEYSTATIC_GITHUB_REPO;
 const githubBranchPrefix = env.KEYSTATIC_GITHUB_BRANCH_PREFIX;
-const [repoOwner = 'jeunet0nas', repoName = 'astro-workers'] = (
-	githubRepo ?? 'jeunet0nas/astro-workers'
-).split('/');
+
+// Parse GitHub repo - no default values to avoid accidental commits to wrong repo
+if (storageKind === 'github' && !githubRepo) {
+	throw new Error(
+		'KEYSTATIC_GITHUB_REPO is required when KEYSTATIC_STORAGE_KIND=github. ' +
+		'Set it in .env (e.g., "owner/repo"). See SECURITY.md for setup.'
+	);
+}
+
+const [repoOwner = '', repoName = ''] = (githubRepo ?? '').split('/');
 
 const storage =
 	storageKind === 'github'
