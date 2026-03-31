@@ -46,8 +46,62 @@ export default config({
 			format: { contentField: 'content' },
 			schema: {
 				title: fields.slug({ name: { label: 'Title' } }),
+				showInHeader: fields.checkbox({
+					label: 'Show in header menu',
+					defaultValue: true,
+				}),
+				navLabel: fields.text({
+					label: 'Header label',
+					description: 'If empty, title will be used.',
+				}),
+				navOrder: fields.integer({
+					label: 'Header order',
+					defaultValue: 100,
+				}),
 				content: fields.markdoc({
 					label: 'Content',
+					options: { image: pageImageOpts },
+				}),
+			},
+		}),
+		sitePages: collection({
+			label: 'Site pages',
+			slugField: 'key',
+			path: 'src/content/site-pages/*',
+			format: { contentField: 'content' },
+			schema: {
+				key: fields.slug({ name: { label: 'Key (home/blog)' } }),
+				pageTitle: fields.text({ label: 'Page title' }),
+				pageDescription: fields.text({
+					label: 'Page description',
+					multiline: true,
+				}),
+				showInHeader: fields.checkbox({
+					label: 'Show in header menu',
+					defaultValue: true,
+				}),
+				navLabel: fields.text({
+					label: 'Header label',
+					description: 'If empty, page title will be used.',
+				}),
+				navOrder: fields.integer({
+					label: 'Header order',
+					defaultValue: 10,
+				}),
+				heroTitle: fields.text({
+					label: 'Hero title',
+					multiline: true,
+				}),
+				heroLead: fields.text({
+					label: 'Hero lead',
+					multiline: true,
+				}),
+				primaryCtaLabel: fields.text({ label: 'Primary CTA label' }),
+				primaryCtaHref: fields.text({ label: 'Primary CTA href' }),
+				secondaryCtaLabel: fields.text({ label: 'Secondary CTA label' }),
+				secondaryCtaHref: fields.text({ label: 'Secondary CTA href' }),
+				content: fields.markdoc({
+					label: 'Body content',
 					options: { image: pageImageOpts },
 				}),
 			},

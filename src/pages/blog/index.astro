@@ -1,13 +1,23 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 
 const posts = await getCollection('posts', ({ data }) => !data.draft);
 posts.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+
+const blogPage = await getEntry('sitePages', 'blog');
+const { Content } = blogPage ? await render(blogPage) : { Content: null };
+const blogTitle = blogPage?.data.pageTitle ?? 'Blog';
+const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viết';
 ---
 
-<Layout title="Blog" description="Danh sách bài viết">
-	<h1>Blog</h1>
+<Layout title={blogTitle} description={blogDescription}>
+	<h1>{blogTitle}</h1>
+	{Content && (
+		<article class="prose" style="margin-bottom: 1.5rem;">
+			<Content />
+		</article>
+	)}
 	<ul class="post-list">
 		{
 			posts.map((post) => (

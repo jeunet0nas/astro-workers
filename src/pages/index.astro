@@ -1,38 +1,56 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getEntry, render } from 'astro:content';
+
+const home = await getEntry('sitePages', 'home');
+const { Content } = home ? await render(home) : { Content: null };
+
+const pageTitle = home?.data.pageTitle ?? 'Trang chủ';
+const pageDescription =
+	home?.data.pageDescription ??
+	'Blog và nội dung tĩnh với Astro + Keystatic — giao diện sáng, chuyên nghiệp.';
+const heroTitle = home?.data.heroTitle ?? 'Welcome';
+const heroLead =
+	home?.data.heroLead ??
+	'Astroblog = Astro + Keystatic';
+const primaryCtaLabel = home?.data.primaryCtaLabel ?? 'Khám phá blog';
+const primaryCtaHref = home?.data.primaryCtaHref ?? '/blog';
+const secondaryCtaLabel = home?.data.secondaryCtaLabel ?? 'Giới thiệu';
+const secondaryCtaHref = home?.data.secondaryCtaHref ?? '/about';
 ---
 
 <Layout
-	title="Trang chủ"
-	description="Blog và nội dung tĩnh với Astro + Keystatic — giao diện sáng, chuyên nghiệp."
+	title={pageTitle}
+	description={pageDescription}
 	wideMain
 >
 	<section class="hero" aria-label="Giới thiệu">
 		<div class="hero-inner">
 			<p class="hero-breadcrumb"><a href="/">Trang chủ</a></p>
-			<h1 class="hero-title">Nội dung của bạn, được quản lý gọn gàng</h1>
-			<p class="hero-lead">
-				Viết bài trong Keystatic, xuất bản tĩnh nhanh trên Cloudflare. Thiết kế sáng, dễ đọc — tập trung
-				vào ý tưởng, không phải công cụ.
-			</p>
+			<h1 class="hero-title">{heroTitle}</h1>
+			<p class="hero-lead">{heroLead}</p>
 			<div class="hero-actions">
-				<a class="btn btn--light" href="/blog">Khám phá blog</a>
-				<a class="btn btn--ghost" href="/p/about">Giới thiệu</a>
+				<a class="btn btn--light" href={primaryCtaHref}>{primaryCtaLabel}</a>
+				<a class="btn btn--ghost" href={secondaryCtaHref}>{secondaryCtaLabel}</a>
 			</div>
 		</div>
 	</section>
 
 	<div class="page-body">
 		<section class="section panel" aria-labelledby="section-explore">
-			<h2 id="section-explore" class="section-title">Cách làm việc với site này</h2>
-			<p class="section-text">
-				Nội dung bài viết và trang tĩnh nằm trong repo dưới dạng file Markdoc. Khi phát triển, mở Keystatic
-				để thêm hoặc sửa bài, rồi build và deploy như bạn vẫn làm với Worker.
-			</p>
-			<p class="section-text">
-				Giao diện ưu tiên khoảng trắng, chữ rõ và màu xanh sky — phù hợp blog cá nhân, portfolio hoặc
-				trang nội bộ nhẹ.
-			</p>
+			{Content ? (
+				<article class="prose">
+					<Content />
+				</article>
+			) : (
+				<>
+					<h2 id="section-explore" class="section-title">Cách làm việc với site này</h2>
+					<p class="section-text">
+						Nội dung bài viết và trang tĩnh nằm trong repo dưới dạng file Markdoc. Khi phát triển, mở
+						Keystatic để thêm hoặc sửa bài.
+					</p>
+				</>
+			)}
 			<ul class="link-grid">
 				<li>
 					<a href="/blog" class="tile-link">

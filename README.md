@@ -19,9 +19,12 @@ Trong `astro.config.mjs`, adapter Cloudflare **tắt khi `npm run dev`** để K
 | Collection | Thư mục              | URL public      |
 |------------|----------------------|-----------------|
 | Blog       | `src/content/posts/` | `/blog/[slug]`  |
-| Pages      | `src/content/pages/` | `/p/[slug]`     |
+| Pages      | `src/content/pages/` | `/[slug]`     |
+| Site pages | `src/content/site-pages/` | `/` va `/blog` (noi dung + nav) |
 
 Ảnh upload trong editor: `src/assets/images/posts/` và `src/assets/images/pages/` (đã cấu hình trong `keystatic.config.ts`).
+
+`site-pages/home` va `site-pages/blog` dung de quan ly noi dung trang chu/trang blog va nhan menu tu Keystatic.
 
 Sau khi đổi nội dung: `npm run build`, rồi `npm run deploy` (hoặc `wrangler deploy`) như trước.
 

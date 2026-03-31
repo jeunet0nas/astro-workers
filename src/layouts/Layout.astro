@@ -1,4 +1,6 @@
 ---
+import { getCollection } from 'astro:content';
+
 interface Props {
 	title?: string;
 	description?: string;
@@ -12,12 +14,29 @@ const {
 	wideMain = false,
 } = Astro.props;
 
-const nav = [
-	{ href: '/', label: 'Trang chủ' },
-	{ href: '/blog', label: 'Blog' },
-	{ href: '/p/about', label: 'Giới thiệu' },
-	{ href: '/keystatic', label: 'Quản trị' },
-];
+const coreNav = [{ href: '/keystatic', label: 'Quản trị' }];
+
+const reservedPageSlugs = new Set(['blog', 'keystatic', 'api', '_astro']);
+
+const dynamicPageNav = (await getCollection('pages'))
+	.filter((page) => !reservedPageSlugs.has(page.id.toLowerCase()))
+	.filter((page) => page.data.showInHeader !== false)
+	.sort((a, b) => (a.data.navOrder ?? 100) - (b.data.navOrder ?? 100))
+	.map((page) => ({
+		href: `/${page.id}`,
+		label: page.data.navLabel?.trim() || page.data.title,
+	}));
+
+const systemNav = (await getCollection('sitePages'))
+	.filter((entry) => ['home', 'blog'].includes(entry.id.toLowerCase()))
+	.filter((entry) => entry.data.showInHeader !== false)
+	.sort((a, b) => (a.data.navOrder ?? 10) - (b.data.navOrder ?? 10))
+	.map((entry) => ({
+		href: entry.id.toLowerCase() === 'home' ? '/' : '/blog',
+		label: entry.data.navLabel?.trim() || entry.data.pageTitle,
+	}));
+
+const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 ---
 
 <!doctype html>

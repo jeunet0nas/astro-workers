@@ -1,13 +1,27 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import Layout from '../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
+	const reservedSlugs = new Set([
+		'',
+		'blog',
+		'keystatic',
+		'api',
+		'_astro',
+		'favicon.ico',
+		'favicon.svg',
+		'robots.txt',
+		'sitemap-index.xml',
+		'sitemap-0.xml',
+	]);
 	const entries = await getCollection('pages');
-	return entries.map((entry) => ({
-		params: { slug: entry.id },
-		props: { entry },
-	}));
+	return entries
+		.filter((entry) => !reservedSlugs.has(entry.id.toLowerCase()))
+		.map((entry) => ({
+			params: { slug: entry.id },
+			props: { entry },
+		}));
 }
 
 const { entry } = Astro.props;
