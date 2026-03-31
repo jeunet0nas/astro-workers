@@ -1,11 +1,221 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout
+	title="Trang chủ"
+	description="Blog và nội dung tĩnh với Astro + Keystatic — giao diện sáng, chuyên nghiệp."
+	wideMain
+>
+	<section class="hero" aria-label="Giới thiệu">
+		<div class="hero-inner">
+			<p class="hero-breadcrumb"><a href="/">Trang chủ</a></p>
+			<h1 class="hero-title">Nội dung của bạn, được quản lý gọn gàng</h1>
+			<p class="hero-lead">
+				Viết bài trong Keystatic, xuất bản tĩnh nhanh trên Cloudflare. Thiết kế sáng, dễ đọc — tập trung
+				vào ý tưởng, không phải công cụ.
+			</p>
+			<div class="hero-actions">
+				<a class="btn btn--light" href="/blog">Khám phá blog</a>
+				<a class="btn btn--ghost" href="/p/about">Giới thiệu</a>
+			</div>
+		</div>
+	</section>
+
+	<div class="page-body">
+		<section class="section panel" aria-labelledby="section-explore">
+			<h2 id="section-explore" class="section-title">Cách làm việc với site này</h2>
+			<p class="section-text">
+				Nội dung bài viết và trang tĩnh nằm trong repo dưới dạng file Markdoc. Khi phát triển, mở Keystatic
+				để thêm hoặc sửa bài, rồi build và deploy như bạn vẫn làm với Worker.
+			</p>
+			<p class="section-text">
+				Giao diện ưu tiên khoảng trắng, chữ rõ và màu xanh sky — phù hợp blog cá nhân, portfolio hoặc
+				trang nội bộ nhẹ.
+			</p>
+			<ul class="link-grid">
+				<li>
+					<a href="/blog" class="tile-link">
+						<span class="tile-link-title">Blog</span>
+						<span class="tile-link-desc">Danh sách bài viết mới nhất</span>
+					</a>
+				</li>
+				<li>
+					<a href="/keystatic" class="tile-link">
+						<span class="tile-link-title">Keystatic</span>
+						<span class="tile-link-desc">Chỉnh nội dung khi chạy dev</span>
+					</a>
+				</li>
+			</ul>
+		</section>
+	</div>
 </Layout>
+
+<style>
+	.hero {
+		background: linear-gradient(135deg, var(--color-hero) 0%, var(--color-hero-deep) 100%);
+		color: white;
+		padding: 2.5rem 1.5rem 3.5rem;
+		box-shadow: var(--shadow-soft);
+	}
+
+	.hero-inner {
+		max-width: 42rem;
+		margin: 0 auto;
+	}
+
+	.hero-breadcrumb {
+		margin: 0 0 1rem;
+		font-size: 0.875rem;
+		opacity: 0.92;
+	}
+
+	.hero-breadcrumb a {
+		color: white;
+		text-decoration: none;
+		font-weight: 500;
+	}
+
+	.hero-breadcrumb a:hover {
+		text-decoration: underline;
+	}
+
+	.hero-title {
+		margin: 0;
+		font-size: clamp(1.85rem, 5vw, 2.5rem);
+		font-weight: 700;
+		line-height: 1.15;
+		letter-spacing: -0.03em;
+	}
+
+	.hero-lead {
+		margin: 1.25rem 0 0;
+		font-size: 1.0625rem;
+		line-height: 1.65;
+		opacity: 0.95;
+		max-width: 36rem;
+	}
+
+	.hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 1.75rem;
+	}
+
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.65rem 1.35rem;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		font-family: inherit;
+		border-radius: 999px;
+		text-decoration: none;
+		transition:
+			background 0.15s ease,
+			color 0.15s ease,
+			box-shadow 0.15s ease;
+	}
+
+	.btn--light {
+		background: white;
+		color: var(--accent);
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.btn--light:hover {
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+	}
+
+	.btn--ghost {
+		background: transparent;
+		color: white;
+		border: 2px solid rgba(255, 255, 255, 0.85);
+	}
+
+	.btn--ghost:hover {
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.page-body {
+		background: var(--bg);
+		padding: 2.5rem 1.25rem 4rem;
+	}
+
+	.section {
+		max-width: 42rem;
+		margin: 0 auto;
+	}
+
+	.panel {
+		padding: 2rem 0 0;
+	}
+
+	.section-title {
+		margin: 0 0 1rem;
+		font-size: clamp(1.35rem, 3vw, 1.65rem);
+		font-weight: 700;
+		color: var(--text-heading);
+		letter-spacing: -0.02em;
+		line-height: 1.2;
+	}
+
+	.section-text {
+		margin: 0 0 1rem;
+		color: var(--muted);
+		font-size: 1.0625rem;
+		line-height: 1.7;
+	}
+
+	.section-text:last-of-type {
+		margin-bottom: 1.75rem;
+	}
+
+	.link-grid {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: 1fr;
+	}
+
+	@media (min-width: 480px) {
+		.link-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	.tile-link {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 1.25rem 1.35rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		text-decoration: none;
+		color: inherit;
+		transition:
+			border-color 0.15s ease,
+			box-shadow 0.15s ease;
+	}
+
+	.tile-link:hover {
+		border-color: var(--accent);
+		box-shadow: var(--shadow-soft);
+	}
+
+	.tile-link-title {
+		font-weight: 600;
+		font-size: 1.05rem;
+		color: var(--text-heading);
+	}
+
+	.tile-link-desc {
+		font-size: 0.875rem;
+		color: var(--muted);
+	}
+</style>

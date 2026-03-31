@@ -1,46 +1,36 @@
-# Astro Starter Kit: Basics
+# my-astro-app
+
+Astro 6, Cloudflare Workers adapter, blog và trang tĩnh qua [Keystatic](https://keystatic.com/).
+
+## Chạy local
 
 ```sh
-npm create astro@latest -- --template basics
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+- Site: `http://127.0.0.1:4321` (hoặc port khác nếu Astro báo “Port … is in use”).
+- Keystatic: `http://127.0.0.1:4321/keystatic` (cùng port với dev).
 
-## 🚀 Project Structure
+Trong `astro.config.mjs`, adapter Cloudflare **tắt khi `npm run dev`** để Keystatic hoạt động (dev Cloudflare dùng esbuild và không resolve `virtual:keystatic-config`). **`npm run build`** / **`npm run preview`** vẫn dùng adapter như khi deploy.
 
-Inside of your Astro project, you'll see the following folders and files:
+## Nội dung
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+| Collection | Thư mục              | URL public      |
+|------------|----------------------|-----------------|
+| Blog       | `src/content/posts/` | `/blog/[slug]`  |
+| Pages      | `src/content/pages/` | `/p/[slug]`     |
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+Ảnh upload trong editor: `src/assets/images/posts/` và `src/assets/images/pages/` (đã cấu hình trong `keystatic.config.ts`).
 
-## 🧞 Commands
+Sau khi đổi nội dung: `npm run build`, rồi `npm run deploy` (hoặc `wrangler deploy`) như trước.
 
-All commands are run from the root of the project, from a terminal:
+## Ghi chú
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+- `@keystatic/astro` khai báo peer `astro@2–5`; dự án dùng Astro 6 nên repo có `.npmrc` với `legacy-peer-deps=true` để cài dependency ổn định. Nếu có bản Keystatic hỗ trợ Astro 6 chính thức, có thể bỏ cài đặt này.
 
-## 👀 Want to learn more?
+- **Patch `astro`:** lưu trong `patches/astro+6.1.2.patch` — ghi `.astro/data-store.json` dùng file `.tmp` tên ngẫu nhiên để tránh lỗi `ENOENT ... rename ... data-store.json.tmp` trên Windows khi Keystatic lưu bài kèm ảnh (nhiều lần ghi nội dung collections gần nhau). `npm install` chạy `patch-package` qua `postinstall`.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Tài liệu kế hoạch
+
+Xem `docs/keystatic-blog-development-plan.md` (checklist và mở rộng sau v1).

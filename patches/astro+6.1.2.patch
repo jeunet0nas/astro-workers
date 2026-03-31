@@ -1,0 +1,30 @@
+diff --git a/node_modules/astro/dist/content/mutable-data-store.js b/node_modules/astro/dist/content/mutable-data-store.js
+index 55896fe..e44e427 100644
+--- a/node_modules/astro/dist/content/mutable-data-store.js
++++ b/node_modules/astro/dist/content/mutable-data-store.js
+@@ -1,3 +1,4 @@
++import { randomBytes } from "node:crypto";
+ import { existsSync, promises as fs } from "node:fs";
+ import * as devalue from "devalue";
+ import { Traverse } from "neotraverse/modern";
+@@ -210,7 +211,8 @@ ${lines.join(",\n")}]);
+       return;
+     }
+     this.#writing.add(fileKey);
+-    const tempFile = filePath instanceof URL ? new URL(`${filePath.href}.tmp`) : `${filePath}.tmp`;
++    const unique = randomBytes(8).toString("hex");
++    const tempFile = filePath instanceof URL ? new URL(`${filePath.href}.${unique}.tmp`) : `${filePath}.${unique}.tmp`;
+     try {
+       const oldData = await fs.readFile(filePath, "utf-8").catch(() => "");
+       if (oldData === data) {
+@@ -218,6 +220,10 @@ ${lines.join(",\n")}]);
+       }
+       await fs.writeFile(tempFile, data);
+       await fs.rename(tempFile, filePath);
++    } catch (err) {
++      await fs.rm(tempFile, { force: true }).catch(() => {
++      });
++      throw err;
+     } finally {
+       this.#writing.delete(fileKey);
+       if (this.#pending.has(fileKey)) {

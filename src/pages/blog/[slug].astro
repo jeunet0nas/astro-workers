@@ -1,0 +1,35 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('posts', ({ data }) => !data.draft);
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const title = post.data.title;
+const description = post.data.summary ?? `Bài viết: ${title}`;
+---
+
+<Layout title={title} description={description}>
+	<article class="prose">
+		<p class="meta">
+			<time datetime={post.data.publishDate.toISOString()}>
+				{post.data.publishDate.toLocaleDateString('vi-VN')}
+			</time>
+		</p>
+		<h1>{title}</h1>
+		{post.data.coverImage && <Image src={post.data.coverImage} alt={title} />}
+		<Content />
+	</article>
+	<p style="margin-top: 2rem;">
+		<a href="/blog">← Blog</a>
+	</p>
+</Layout>
