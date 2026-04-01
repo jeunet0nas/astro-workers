@@ -2,76 +2,175 @@
 
 Astro 6, Cloudflare Workers adapter, blog và trang tĩnh qua [Keystatic](https://keystatic.com/).
 
-## ⚠️ Bảo mật quan trọng
+## 🚀 Quick Start
 
-**Trước khi bắt đầu, đọc [SECURITY.md](./SECURITY.md) để thiết lập đúng credentials!**
-
-- ❌ **KHÔNG BAO GIỜ** commit file `.env` hoặc `.dev.vars`
-- ✅ Sử dụng `.env.example` và `.dev.vars.example` làm template
-- ✅ Generate secret mới: `openssl rand -hex 32`
-
-## Chạy local
+### Local Development (Đơn giản)
 
 ```sh
 # 1. Cài đặt dependencies
 npm install
 
-# 2. Thiết lập environment variables
+# 2. (Optional) Copy .env.example nếu cần tùy chỉnh
 cp .env.example .env
-# Chỉnh sửa .env với giá trị thực của bạn
 
 # 3. Chạy dev server
 npm run dev
 ```
 
-- Site: `http://127.0.0.1:4321` (hoặc port khác nếu Astro báo “Port … is in use”).
-- Keystatic: `http://127.0.0.1:4321/keystatic` (cùng port với dev).
+**Keystatic tự động chạy ở chế độ local** - không cần setup GitHub App cho development!
 
-Trong `astro.config.mjs`, adapter Cloudflare **tắt khi `npm run dev`** để Keystatic hoạt động (dev Cloudflare dùng esbuild và không resolve `virtual:keystatic-config`). **`npm run build`** / **`npm run preview`** vẫn dùng adapter như khi deploy.
+- Site: `http://127.0.0.1:4321`
+- Keystatic CMS: `http://127.0.0.1:4321/keystatic`
 
-## Nội dung
+### Production Deployment (Chi tiết)
 
-| Collection | Thư mục              | URL public      |
-|------------|----------------------|-----------------|
-| Blog       | `src/content/posts/` | `/blog/[slug]`  |
-| Pages      | `src/content/pages/` | `/[slug]`     |
-| Site pages | `src/content/site-pages/` | `/` va `/blog` (noi dung + nav) |
+Để deploy lên Cloudflare Workers với Keystatic GitHub integration:
 
-Ảnh upload trong editor: `src/assets/images/posts/` và `src/assets/images/pages/` (đã cấu hình trong `keystatic.config.ts`).
+```sh
+# 1. Setup GitHub App và secrets
+npm run deploy:secrets  # Interactive setup wizard
 
-`site-pages/home` va `site-pages/blog` dung de quan ly noi dung trang chu/trang blog va nhan menu tu Keystatic.
+# 2. Tạo KV namespace cho sessions
+wrangler kv:namespace create SESSION
+# Cập nhật ID vào wrangler.jsonc
 
-Sau khi đổi nội dung: `npm run build`, rồi `npm run deploy` (hoặc `wrangler deploy`) như trước.
+# 3. Deploy
+npm run deploy
+```
 
-## Tao lai Worker (de nghi)
+📖 **Xem hướng dẫn đầy đủ:** [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-Neu ban xoa worker hien tai, hay tao lai bang Wrangler thay vi dashboard Git deploy:
+---
 
-1. `npm install`
-2. `npx wrangler login`
-3. `npm run deploy`
+## 🔐 Bảo mật quan trọng
 
-Script deploy dung config do Astro tao ra: `dist/server/wrangler.json`.
+- ❌ **KHÔNG BAO GIỜ** commit file `.env` hoặc `.dev.vars`
+- ✅ Secrets cho production: dùng `wrangler secret put`
+- ✅ Generate secret mạnh: `openssl rand -hex 32`
 
-### Keystatic tren production (GitHub mode)
+📖 **Chi tiết:** [SECURITY.md](./SECURITY.md)
 
-De `/keystatic` hoat dong khi deploy worker, set cac bien moi truong tren Cloudflare Worker:
+---
 
-- `KEYSTATIC_STORAGE_KIND=github`
-- `KEYSTATIC_GITHUB_REPO=jeunet0nas/astro-workers`
-- `KEYSTATIC_GITHUB_CLIENT_ID=...`
-- `KEYSTATIC_GITHUB_CLIENT_SECRET=...`
-- `KEYSTATIC_SECRET=...`
-- `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG=...`
+## 📁 Nội dung & Cấu trúc
 
-Khong commit cac gia tri secret vao repo.
+### Collections
 
-## Ghi chú
+| Collection | Thư mục | URL | Mục đích |
+|------------|---------|-----|----------|
+| Blog posts | `src/content/posts/` | `/blog/[slug]` | Bài viết blog |
+| Pages | `src/content/pages/` | `/[slug]` | Trang tĩnh |
+| Site pages | `src/content/site-pages/` | `/`, `/blog` | Trang chủ, blog index |
 
-- `@keystatic/astro` khai báo peer `astro@2–5`; dự án dùng Astro 6 nên repo có `.npmrc` với `legacy-peer-deps=true` để cài dependency ổn định. Nếu có bản Keystatic hỗ trợ Astro 6 chính thức, có thể bỏ cài đặt này.
+### Images
 
-- **Patch `astro`:** lưu trong `patches/astro+6.1.2.patch` — ghi `.astro/data-store.json` dùng file `.tmp` tên ngẫu nhiên để tránh lỗi `ENOENT ... rename ... data-store.json.tmp` trên Windows khi Keystatic lưu bài kèm ảnh (nhiều lần ghi nội dung collections gần nhau). `npm install` chạy `patch-package` qua `postinstall`.
+Ảnh được lưu trong:
+- `src/assets/images/posts/` - Blog post images
+- `src/assets/images/pages/` - Page images
 
-## Tài liệu kế hoạch
+Keystatic tự động xử lý upload qua editor.
 
-Xem `docs/keystatic-blog-development-plan.md` (checklist và mở rộng sau v1).
+---
+
+## 🎯 Storage Modes (Tự động)
+
+Dự án **tự động phát hiện môi trường** và chọn storage mode phù hợp:
+
+### 🏠 Local Development
+- **Chế độ:** `local` (tự động)
+- **Hoạt động:** Keystatic edit files trực tiếp trên filesystem
+- **Không cần:** GitHub App, KV namespace
+- **Dùng cho:** Development, content editing nhanh
+
+### ☁️ Production (Cloudflare Workers)
+- **Chế độ:** `github` (tự động)
+- **Hoạt động:** Keystatic commit vào GitHub qua OAuth
+- **Yêu cầu:** GitHub App, KV namespace, secrets
+- **Dùng cho:** Deployed site, collaborative editing
+
+**Không cần set `KEYSTATIC_STORAGE_KIND` manually** - tự động detect!
+
+---
+
+## 🛠️ Scripts
+
+```sh
+# Development
+npm run dev              # Dev server (local mode)
+npm run build            # Production build
+npm run preview          # Build & preview locally
+
+# Deployment
+npm run deploy           # Build + deploy to Workers
+npm run deploy:check     # Validate config before deploy
+npm run deploy:secrets   # Interactive secrets setup
+
+# Types
+npm run generate-types   # Generate Cloudflare types
+```
+
+---
+
+## ⚙️ Cấu hình đặc biệt
+
+### Conditional Adapter
+
+`astro.config.mjs` tắt Cloudflare adapter khi `npm run dev` để Keystatic hoạt động. Production builds vẫn dùng adapter bình thường.
+
+**Lý do:** Cloudflare dev mode dùng esbuild, không resolve `virtual:keystatic-config`.
+
+### Astro 6 + Keystatic Compatibility
+
+- Keystatic chưa official support Astro 6
+- `.npmrc` có `legacy-peer-deps=true` để install được
+- Chờ Keystatic update hoặc dùng như hiện tại
+
+### Windows Patch
+
+`patches/astro+6.1.2.patch` fix lỗi concurrent writes vào `.astro/data-store.json` trên Windows. Auto-applied qua `postinstall`.
+
+---
+
+## 📖 Documentation
+
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide (chi tiết)
+- **[SECURITY.md](./SECURITY.md)** - Security best practices
+- **[.github/copilot-instructions.md](./.github/copilot-instructions.md)** - Codebase conventions
+
+---
+
+## 🐛 Troubleshooting
+
+### Keystatic không load trên production?
+
+1. Check Worker logs: `wrangler tail`
+2. Verify secrets: `wrangler secret list`
+3. Check KV binding trong `wrangler.jsonc`
+4. Xem [DEPLOYMENT.md](./DEPLOYMENT.md) - Troubleshooting section
+
+### OAuth callback error?
+
+GitHub App callback URL phải match **chính xác** với Worker domain:
+```
+https://your-worker.workers.dev/api/keystatic/github/oauth/callback
+```
+
+### Local dev không chạy?
+
+```sh
+# Clean install
+rm -rf node_modules package-lock.json
+npm install
+
+# Check Astro version
+npm list astro  # Should be 6.1.2
+```
+
+---
+
+## 📚 Resources
+
+- [Astro Documentation](https://docs.astro.build/)
+- [Keystatic Documentation](https://keystatic.com/docs)
+- [Cloudflare Workers](https://developers.cloudflare.com/workers/)
+- [Astro Cloudflare Adapter](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)

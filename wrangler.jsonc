@@ -9,7 +9,21 @@
 		"directory": "./dist",
 		"binding": "ASSETS"
 	},
+	// KV namespace for Keystatic session storage (REQUIRED for GitHub OAuth)
+	"kv_namespaces": [
+		{
+			"binding": "SESSION",
+			"id": "606a667df731409f8dbbb4c099d3e942"
+		}
+	],
 	"observability": {
 		"enabled": true
 	}
+	// Note: Environment variables (secrets) are set via:
+	//   wrangler secret put KEYSTATIC_GITHUB_CLIENT_ID
+	//   wrangler secret put KEYSTATIC_GITHUB_CLIENT_SECRET
+	//   wrangler secret put KEYSTATIC_SECRET
+	//   wrangler secret put PUBLIC_KEYSTATIC_GITHUB_APP_SLUG
+	//   wrangler secret put KEYSTATIC_GITHUB_REPO
+	// See DEPLOYMENT.md for detailed setup instructions
 }

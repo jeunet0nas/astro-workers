@@ -2,21 +2,40 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 /**
+ * Detect if running in production Cloudflare Workers environment
+ */
+function isProductionEnvironment(): boolean {
+	return (
+		process.env.CF_PAGES === '1' ||
+		process.env.CLOUDFLARE_ENV === 'production' ||
+		process.env.NODE_ENV === 'production'
+	);
+}
+
+/**
  * Validates required environment variables for Keystatic
- * Call this early in your app to fail fast if config is missing
+ * Behavior changes based on detected environment:
+ * - Production: Strict validation, errors on missing vars
+ * - Development: Relaxed validation, warnings only
  */
 export function validateEnvVars() {
 	const errors: string[] = [];
 	const warnings: string[] = [];
-
-	// Check storage kind
-	const storageKind = process.env.KEYSTATIC_STORAGE_KIND;
 	
-	if (!storageKind) {
-		warnings.push('KEYSTATIC_STORAGE_KIND not set, defaulting to "local"');
+	const isProduction = isProductionEnvironment();
+	const explicitStorageKind = process.env.KEYSTATIC_STORAGE_KIND;
+	const storageKind = explicitStorageKind ?? (isProduction ? 'github' : 'local');
+	
+	// Log detected environment
+	console.log(`\n🔍 Environment Detection:`);
+	console.log(`  - Mode: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+	console.log(`  - Storage: ${storageKind}${explicitStorageKind ? ' (explicit)' : ' (auto-detected)'}`);
+	
+	if (!explicitStorageKind && isProduction) {
+		console.log(`  - Auto-selected GitHub mode for production`);
 	}
-
-	// If GitHub mode, validate required vars
+	
+	// GitHub mode validation
 	if (storageKind === 'github') {
 		const requiredGitHubVars = [
 			'KEYSTATIC_GITHUB_CLIENT_ID',
@@ -26,9 +45,19 @@ export function validateEnvVars() {
 			'KEYSTATIC_GITHUB_REPO',
 		];
 
-		for (const varName of requiredGitHubVars) {
-			if (!process.env[varName]) {
-				errors.push(`Missing required env var for GitHub mode: ${varName}`);
+		const missingVars = requiredGitHubVars.filter(varName => !process.env[varName]);
+		
+		if (missingVars.length > 0) {
+			const message = `Missing required env vars for GitHub mode:\n${missingVars.map(v => `    - ${v}`).join('\n')}`;
+			
+			if (isProduction) {
+				// Production: strict - throw error
+				errors.push(message);
+				errors.push('Set via: wrangler secret put <VAR_NAME>');
+			} else {
+				// Dev: relaxed - just warn
+				warnings.push(message);
+				warnings.push('GitHub OAuth may not work without these. See SECURITY.md for setup.');
 			}
 		}
 
@@ -52,14 +81,37 @@ export function validateEnvVars() {
 		for (const [key, value] of Object.entries(process.env)) {
 			if (key.startsWith('KEYSTATIC_') && typeof value === 'string') {
 				if (placeholderValues.includes(value)) {
-					errors.push(`${key} still has placeholder value. Please set real credentials.`);
+					const message = `${key} still has placeholder value. Please set real credentials.`;
+					if (isProduction) {
+						errors.push(message);
+					} else {
+						warnings.push(message);
+					}
 				}
 			}
 		}
+		
+		// Production-specific: Check for KV session binding availability
+		if (isProduction) {
+			// Note: This check runs at build/start time, actual KV binding is runtime
+			console.log('  - Ensure SESSION KV namespace is bound in wrangler.jsonc');
+		}
+	}
+	
+	// Local mode validation
+	if (storageKind === 'local') {
+		if (isProduction) {
+			warnings.push(
+				'Running in PRODUCTION with LOCAL storage mode. ' +
+				'Content changes will not persist across deployments!'
+			);
+		} else {
+			console.log('  - Local mode: Content saved to filesystem');
+		}
 	}
 
-	// Security check: warn if .env might be committed
-	if (process.env.NODE_ENV !== 'production') {
+	// Security check: warn if .env might be committed (dev only)
+	if (!isProduction) {
 		const gitignorePath = join(process.cwd(), '.gitignore');
 		if (existsSync(gitignorePath)) {
 			const gitignoreContent = readFileSync(gitignorePath, 'utf-8');
@@ -74,15 +126,15 @@ export function validateEnvVars() {
 	// Log warnings
 	if (warnings.length > 0) {
 		console.warn('\n⚠️  Environment Configuration Warnings:');
-		warnings.forEach((w) => console.warn(`  - ${w}`));
+		warnings.forEach((w) => console.warn(`  ${w}`));
 	}
 
-	// Throw on errors
+	// Throw on errors (production only)
 	if (errors.length > 0) {
 		console.error('\n❌ Environment Configuration Errors:');
-		errors.forEach((e) => console.error(`  - ${e}`));
+		errors.forEach((e) => console.error(`  ${e}`));
 		console.error(
-			'\n📖 See SECURITY.md for setup instructions and .env.example for template.\n'
+			'\n📖 See SECURITY.md for setup instructions and DEPLOYMENT.md for production guide.\n'
 		);
 		throw new Error('Invalid environment configuration. Fix the errors above and restart.');
 	}
@@ -90,7 +142,7 @@ export function validateEnvVars() {
 	// Success message
 	if (errors.length === 0 && warnings.length === 0) {
 		const mode = storageKind === 'github' ? '☁️  GitHub' : '📁 Local';
-		console.log(`✅ Environment validated successfully (${mode} mode)`);
+		console.log(`✅ Environment validated successfully (${mode} mode)\n`);
 	}
 }
 
@@ -98,8 +150,8 @@ export function validateEnvVars() {
  * Call this in development to remind devs about security
  */
 export function securityReminder() {
-	if (process.env.NODE_ENV !== 'production' && process.env.CI !== 'true') {
-		console.log('\n🔐 Security Reminder:');
+	if (!isProductionEnvironment() && process.env.CI !== 'true') {
+		console.log('🔐 Security Reminder:');
 		console.log('  - Never commit .env or .dev.vars files');
 		console.log('  - Rotate secrets if accidentally exposed');
 		console.log('  - See SECURITY.md for best practices\n');

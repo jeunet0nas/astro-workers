@@ -13,6 +13,9 @@
 		"astro": "astro",
 		"generate-types": "wrangler types",
 		"deploy": "astro build && wrangler deploy --config dist/server/wrangler.json",
+		"deploy:check": "node scripts/validate-deploy.js",
+		"deploy:secrets": "node scripts/setup-secrets.js",
+		"predeploy": "node scripts/validate-deploy.js",
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {

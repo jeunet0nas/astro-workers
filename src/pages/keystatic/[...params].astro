@@ -1,0 +1,58 @@
+---
+/**
+ * Custom Keystatic page that loads client-side only.
+ * Works around Cloudflare SSR renderer issue by avoiding client:only directive.
+ */
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Keystatic</title>
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+		}
+		#keystatic-root {
+			height: 100%;
+		}
+		.loading {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 100vh;
+			font-family: system-ui, sans-serif;
+			color: #666;
+		}
+	</style>
+</head>
+<body>
+	<div id="keystatic-root">
+		<div class="loading">Loading Keystatic...</div>
+	</div>
+	<script>
+		// Dynamically import and render Keystatic
+		(async () => {
+			const [{ createRoot }, { Keystatic }, { jsx }, config] = await Promise.all([
+				import('react-dom/client'),
+				import('@keystatic/core/ui'),
+				import('react/jsx-runtime'),
+				import('virtual:keystatic-config').then(m => m.default)
+			]);
+
+			const appSlug = {
+				envName: 'PUBLIC_KEYSTATIC_GITHUB_APP_SLUG',
+				value: import.meta.env.PUBLIC_KEYSTATIC_GITHUB_APP_SLUG
+			};
+
+			const root = createRoot(document.getElementById('keystatic-root'));
+			root.render(jsx(Keystatic, { config, appSlug }));
+		})();
+	</script>
+</body>
+</html>
