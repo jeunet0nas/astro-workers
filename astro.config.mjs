@@ -1,11 +1,15 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { loadEnv } from 'vite';
 
 import cloudflare from '@astrojs/cloudflare';
 
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import keystatic from '@keystatic/astro';
+
+// Load environment variables from .env files (Astro config runs before Astro loads them)
+const { KEYSTATIC_GITHUB_REPO = '' } = loadEnv(process.env.NODE_ENV || 'production', process.cwd(), '');
 
 /** Cloudflare dev bundles SSR với esbuild và không áp dụng plugin Vite của Keystatic → lỗi `virtual:keystatic-config`. Chỉ bật adapter khi không chạy `astro dev`. */
 const isDevServer =
@@ -14,5 +18,11 @@ const isDevServer =
 // https://astro.build/config
 export default defineConfig({
   adapter: isDevServer ? undefined : cloudflare(),
-  integrations: [react(), markdoc(), keystatic()]
+  integrations: [react(), markdoc(), keystatic()],
+  vite: {
+    define: {
+      // Inject repo at build time so keystatic.config.ts can access it client-side
+      'import.meta.env.KEYSTATIC_GITHUB_REPO': JSON.stringify(KEYSTATIC_GITHUB_REPO),
+    },
+  },
 });
