@@ -13,6 +13,7 @@ const {
 	description = 'Blog & pages powered by Astro + Keystatic',
 	wideMain = false,
 } = Astro.props;
+const currentPath = Astro.url.pathname;
 
 const coreNav = [{ href: '/keystatic', label: 'Quản trị' }];
 
@@ -60,7 +61,18 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 		<header class="site-header">
 			<a class="logo" href="/">AstroBlog</a>
 			<nav class="nav" aria-label="Chính">
-				{nav.map(({ href, label }) => <a href={href}>{label}</a>)}
+				{nav.map(({ href, label }) => {
+					const isActive =
+						href === '/'
+							? currentPath === '/'
+							: currentPath === href || currentPath.startsWith(`${href}/`);
+
+					return (
+						<a href={href} aria-current={isActive ? 'page' : undefined}>
+							{label}
+						</a>
+					);
+				})}
 			</nav>
 			<a class="nav-cta" href="/blog">Xem bài viết</a>
 		</header>
@@ -72,22 +84,38 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 
 <style is:global>
 	:root {
-		--color-hero: #0ea5e9;
-		--color-hero-deep: #0284c7;
-		--bg: #ffffff;
-		--surface: #f8fafc;
-		--text: #1e293b;
-		--text-heading: #0f172a;
-		--muted: #64748b;
-		--accent: #0284c7;
-		--accent-hover: #0369a1;
-		--link: #0ea5e9;
-		--border: #e2e8f0;
-		--shadow-soft: 0 4px 24px rgba(15, 23, 42, 0.06);
+		--primary: #2563eb;
+		--primary-600: #1d4ed8;
+		--primary-soft: #dbeafe;
+		--accent-cyan: #06b6d4;
+		--bg-page: #f8fafc;
+		--bg-base: #ffffff;
+		--surface-1: #ffffff;
+		--surface-2: #f1f5f9;
+		--text-1: #0f172a;
+		--text-2: #334155;
+		--text-3: #64748b;
+		--text-heading: var(--text-1);
+		--muted: var(--text-3);
+		--border-1: #e2e8f0;
+		--border-2: #cbd5e1;
+		--radius-sm: 10px;
+		--radius-md: 14px;
+		--radius-lg: 18px;
+		--space-2: 0.5rem;
+		--space-3: 0.75rem;
+		--space-4: 1rem;
+		--space-6: 1.5rem;
+		--space-8: 2rem;
+		--space-12: 3rem;
+		--shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.06);
+		--shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+		--content-width: min(100% - 2rem, 72rem);
+		--reading-width: 72ch;
 		font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 		line-height: 1.6;
-		color: var(--text);
-		background: var(--bg);
+		color: var(--text-2);
+		background: var(--bg-page);
 		-webkit-font-smoothing: antialiased;
 	}
 
@@ -96,24 +124,30 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 		align-items: center;
 		justify-content: space-between;
 		flex-wrap: wrap;
-		gap: 1rem;
-		padding: 1rem 1.5rem;
-		max-width: 72rem;
+		gap: var(--space-4);
+		padding: 0.85rem 1rem;
+		max-width: var(--content-width);
 		margin: 0 auto;
-		background: var(--bg);
-		border-bottom: 1px solid var(--border);
+		background: color-mix(in srgb, var(--bg-base) 92%, transparent);
+		border: 1px solid var(--border-1);
+		border-radius: var(--radius-lg);
+		position: sticky;
+		top: 0.75rem;
+		z-index: 40;
+		backdrop-filter: blur(10px);
+		margin-top: 0.75rem;
 	}
 
 	.logo {
 		font-weight: 700;
 		font-size: 1.125rem;
-		color: var(--accent);
+		color: var(--primary);
 		text-decoration: none;
 		letter-spacing: -0.02em;
 	}
 
 	.logo:hover {
-		color: var(--accent-hover);
+		color: var(--primary-600);
 	}
 
 	.nav {
@@ -125,42 +159,55 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 	}
 
 	.nav a {
-		color: var(--muted);
+		color: var(--text-3);
 		text-decoration: none;
 		font-size: 0.9375rem;
 		font-weight: 500;
+		padding: 0.35rem 0.625rem;
+		border-radius: 999px;
+		transition:
+			color 0.15s ease,
+			background 0.15s ease;
 	}
 
 	.nav a:hover {
-		color: var(--accent);
+		color: var(--primary-600);
+		background: var(--surface-2);
+	}
+
+	.nav a[aria-current='page'] {
+		color: var(--primary-600);
+		background: var(--primary-soft);
 	}
 
 	.nav-cta {
 		display: inline-flex;
 		align-items: center;
-		padding: 0.5rem 1.15rem;
-		background: var(--bg);
-		color: var(--accent);
+		padding: 0.5rem 1rem;
+		background: var(--bg-base);
+		color: var(--primary);
 		font-size: 0.875rem;
 		font-weight: 600;
 		text-decoration: none;
 		border-radius: 999px;
-		border: 2px solid var(--accent);
+		border: 1px solid var(--primary);
 		white-space: nowrap;
 		transition:
 			background 0.15s ease,
-			color 0.15s ease;
+			color 0.15s ease,
+			border-color 0.15s ease;
 	}
 
 	.nav-cta:hover {
-		background: var(--accent);
+		background: var(--primary);
 		color: white;
+		border-color: var(--primary);
 	}
 
 	.main {
-		max-width: 42rem;
+		max-width: var(--reading-width);
 		margin: 0 auto;
-		padding: 2rem 1.25rem 4rem;
+		padding: var(--space-8) 1rem var(--space-12);
 	}
 
 	.main--wide {
@@ -170,31 +217,80 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 	}
 
 	.prose {
-		font-size: 1.0625rem;
-		color: var(--text);
+		font-size: 1.05rem;
+		color: var(--text-2);
+		line-height: 1.78;
 	}
 
-	.prose h1,
+	.prose h1 {
+		margin: 0 0 0.75em;
+		font-size: clamp(1.9rem, 3vw, 2.35rem);
+		line-height: 1.15;
+		letter-spacing: -0.03em;
+		color: var(--text-1);
+	}
+
 	.prose h2 {
-		line-height: 1.25;
-		margin-top: 1.75em;
-		margin-bottom: 0.5em;
-		color: var(--text-heading);
+		margin-top: 1.8em;
+		margin-bottom: 0.55em;
+		font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+		color: var(--text-1);
+	}
+
+	.prose h3 {
+		margin-top: 1.35em;
+		margin-bottom: 0.45em;
+		font-size: 1.15rem;
+		line-height: 1.35;
+		color: var(--text-1);
 	}
 
 	.prose p {
 		margin: 0.75em 0;
-		color: var(--text);
+		color: var(--text-2);
+	}
+
+	.prose ul,
+	.prose ol {
+		padding-left: 1.2rem;
+	}
+
+	.prose li {
+		margin: 0.45em 0;
+	}
+
+	.prose blockquote {
+		margin: 1.5rem 0;
+		padding: 0.75rem 1rem;
+		border-left: 3px solid var(--primary);
+		background: var(--surface-2);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+		color: var(--text-2);
+	}
+
+	.prose pre {
+		padding: 1rem;
+		background: #0b1220;
+		color: #e2e8f0;
+		border-radius: var(--radius-sm);
+		overflow: auto;
+	}
+
+	.prose code {
+		font-size: 0.9em;
+		border-radius: 6px;
 	}
 
 	.prose img {
 		max-width: 100%;
 		height: auto;
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 	}
 
 	.prose a {
-		color: var(--link);
+		color: var(--primary);
 		font-weight: 500;
 	}
 
@@ -209,11 +305,11 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 
 	.post-list li {
 		padding: 1rem 0;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--border-1);
 	}
 
 	.post-list a {
-		color: var(--accent);
+		color: var(--primary);
 		font-size: 1.125rem;
 		font-weight: 600;
 		text-decoration: none;
@@ -224,14 +320,21 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 	}
 
 	.meta {
-		color: var(--muted);
+		color: var(--text-3);
 		font-size: 0.9rem;
 		margin: 0.35rem 0 0;
+	}
+
+	a:focus-visible {
+		outline: 2px solid var(--accent-cyan);
+		outline-offset: 2px;
+		border-radius: 6px;
 	}
 
 	html,
 	body {
 		margin: 0;
 		min-height: 100%;
+		background: var(--bg-page);
 	}
 </style>

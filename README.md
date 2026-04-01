@@ -62,6 +62,20 @@ npm run deploy
 | Pages | `src/content/pages/` | `/[slug]` | Trang tĩnh |
 | Site pages | `src/content/site-pages/` | `/`, `/blog` | Trang chủ, blog index |
 
+### Post metadata (Astro + Keystatic sync)
+
+Các field dưới đây phải luôn đồng bộ giữa `src/content.config.ts` và `keystatic.config.ts`:
+
+- `title` (string)
+- `publishDate` (date)
+- `summary` (string, optional)
+- `draft` (boolean)
+- `coverImage` (image, optional)
+- `featured` (boolean)
+- `category` (string)
+- `tags` (string array)
+- `readingTime` (number, optional)
+
 ### Images
 
 Ảnh được lưu trong:
@@ -99,15 +113,30 @@ Dự án **tự động phát hiện môi trường** và chọn storage mode ph
 npm run dev              # Dev server (local mode)
 npm run build            # Production build
 npm run preview          # Build & preview locally
+npm run content:check    # Validate post frontmatter schema sync
 
 # Deployment
-npm run deploy           # Build + deploy to Workers
+npm run deploy           # content:check + build + deploy to Workers
 npm run deploy:check     # Validate config before deploy
 npm run deploy:secrets   # Interactive secrets setup
 
 # Types
 npm run generate-types   # Generate Cloudflare types
 ```
+
+---
+
+## 🔄 Đồng bộ Astro-Keystatic
+
+Để tránh lỗi Keystatic không hiện field mới nhưng Astro vẫn render field đó:
+
+1. Khi thêm/sửa field trong `posts`, cập nhật **đồng thời**:
+   - `src/content.config.ts`
+   - `keystatic.config.ts`
+2. Chạy `npm run content:check` trước commit/deploy.
+3. Nếu check fail, sửa frontmatter tại `src/content/posts/*.mdoc` cho đúng kiểu dữ liệu.
+
+`deploy` và `deploy:check` đã tự chạy `content:check` để chặn deploy khi schema/content lệch.
 
 ---
 

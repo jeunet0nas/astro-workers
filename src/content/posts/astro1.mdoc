@@ -1,8 +1,36 @@
 ---
 title: Astro1
 publishDate: 2026-03-31
-summary: Đây là post đầu tiên
+summary: Cách tổ chức kiến trúc nội dung cho blog công nghệ với Astro + Keystatic
 draft: false
 coverImage: ../../assets/images/posts/astro1/coverImage.jpg
+featured: false
+category: Architecture
+tags:
+  - ContentStrategy
+  - Astro
+  - Keystatic
+readingTime: 6
 ---
-asdfsflshdfsdjfslkfsflksdfkjsdfk;sjdfa
+Khi xây dựng blog công nghệ, vấn đề không chỉ là giao diện đẹp mà còn là **mô hình nội dung** có thể mở rộng lâu dài.
+
+Với Astro + Keystatic, bạn có thể chia hệ nội dung thành ba nhóm:
+
+- `posts`: bài viết kỹ thuật, có metadata như category, tags, readingTime.
+- `pages`: trang tĩnh như About, Contact, Docs.
+- `site-pages`: nội dung khung cho trang chủ, blog index, giúp đội content chỉnh nhanh mà không đụng code.
+
+## Vì sao mô hình này phù hợp cho tech blog?
+
+1. **Tách rõ mục đích dữ liệu**: bài viết và trang điều hướng không lẫn nhau.
+2. **Dễ mở rộng taxonomy**: thêm tags/chuyên mục để làm filter, related posts.
+3. **Tương thích SEO**: metadata rõ ràng giúp tạo title/description tốt hơn.
+
+## Checklist triển khai thực tế
+
+- [x] Chuẩn hóa schema cho `posts` (featured, category, tags, readingTime).
+- [x] Thiết kế blog index theo card + featured post.
+- [x] Bổ sung related posts theo độ liên quan category/tags.
+- [ ] Thêm mục lục tự động cho bài dài (giai đoạn tiếp theo).
+
+Khi nền nội dung tốt, việc nâng cấp trải nghiệm đọc và điều hướng sẽ nhanh hơn nhiều.

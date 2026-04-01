@@ -187,6 +187,30 @@ export default config({
 					multiline: true,
 				}),
 				draft: fields.checkbox({ label: 'Draft', defaultValue: false }),
+				featured: fields.checkbox({
+					label: 'Featured post',
+					description: 'Use for highlighted article on blog index.',
+					defaultValue: false,
+				}),
+				category: fields.text({
+					label: 'Category',
+					description: 'Example: Astro, Deployment, Architecture.',
+				}),
+				tags: fields.array(
+					fields.text({
+						label: 'Tag',
+						description: 'Use short keyword, no comma-separated text.',
+					}),
+					{
+						label: 'Tags',
+						itemLabel: (props) => props.value || 'Tag',
+					}
+				),
+				readingTime: fields.integer({
+					label: 'Reading time (minutes)',
+					description: 'Optional. Leave empty to auto-calculate in frontend.',
+					validation: { min: 1 },
+				}),
 				coverImage: fields.image({
 					label: 'Cover image',
 					...postImageOpts,

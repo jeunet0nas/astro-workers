@@ -13,23 +13,225 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const estimateReadingTime = (text: string) => Math.max(1, Math.ceil(text.trim().split(/\s+/).filter(Boolean).length / 220));
+const readingTime = post.data.readingTime ?? estimateReadingTime(post.body);
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const getTags = (item: (typeof allPosts)[number]) => new Set(item.data.tags?.map((tag) => tag.toLowerCase()) ?? []);
+const currentTags = getTags(post);
+const currentCategory = post.data.category?.toLowerCase();
+
+const relatedPosts = allPosts
+	.filter((item) => item.id !== post.id)
+	.map((item) => {
+		const itemTags = getTags(item);
+		const sharedTags = [...itemTags].filter((tag) => currentTags.has(tag)).length;
+		const categoryScore =
+			currentCategory && item.data.category?.toLowerCase() === currentCategory ? 3 : 0;
+		const score = categoryScore + sharedTags;
+
+		return { item, score };
+	})
+	.sort((a, b) => {
+		if (b.score !== a.score) return b.score - a.score;
+		return b.item.data.publishDate.valueOf() - a.item.data.publishDate.valueOf();
+	})
+	.slice(0, 3)
+	.map(({ item }) => item);
 
 const title = post.data.title;
 const description = post.data.summary ?? `Bài viết: ${title}`;
 ---
 
 <Layout title={title} description={description}>
-	<article class="prose">
-		<p class="meta">
+	<nav class="breadcrumb" aria-label="Breadcrumb">
+		<a href="/">Trang chủ</a>
+		<span>/</span>
+		<a href="/blog">Blog</a>
+		<span>/</span>
+		<span aria-current="page">{title}</span>
+	</nav>
+
+	<article class="prose article">
+		<p class="meta post-meta">
 			<time datetime={post.data.publishDate.toISOString()}>
 				{post.data.publishDate.toLocaleDateString('vi-VN')}
 			</time>
+			<span>·</span>
+			<span>{readingTime} phút đọc</span>
 		</p>
 		<h1>{title}</h1>
-		{post.data.coverImage && <Image src={post.data.coverImage} alt={title} />}
+		{(post.data.category || (post.data.tags && post.data.tags.length > 0)) && (
+			<p class="taxonomy">
+				{post.data.category && <span class="tax-item tax-item--category">{post.data.category}</span>}
+				{post.data.tags?.slice(0, 4).map((tag) => <span class="tax-item">{tag}</span>)}
+			</p>
+		)}
+		{post.data.summary && <p class="lead">{post.data.summary}</p>}
+		{post.data.coverImage && (
+			<div class="cover-wrap">
+				<Image src={post.data.coverImage} alt={title} />
+			</div>
+		)}
 		<Content />
 	</article>
-	<p style="margin-top: 2rem;">
-		<a href="/blog">← Blog</a>
-	</p>
+
+	<section class="article-footer" aria-label="Điều hướng bài viết">
+		<div class="quick-nav">
+			<a href="/">← Về trang chủ</a>
+			<a href="/blog">Xem toàn bộ blog</a>
+		</div>
+		{relatedPosts.length > 0 && (
+			<div class="related">
+				<h2>Bài viết liên quan</h2>
+				<ul class="related-list">
+					{relatedPosts.map((item) => (
+						<li class="related-item">
+							<a href={`/blog/${item.id}`} class="related-link">
+								<span class="related-title">{item.data.title}</span>
+								<span class="related-meta">
+									{item.data.category ?? 'Chuyên mục công nghệ'}
+									{' · '}
+									{item.data.publishDate.toLocaleDateString('vi-VN')}
+									{' · '}
+									{item.data.readingTime ?? estimateReadingTime(item.body)} phút đọc
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</div>
+		)}
+	</section>
 </Layout>
+
+<style>
+	.breadcrumb {
+		margin: 0 0 0.75rem;
+		font-size: 0.9rem;
+		color: var(--text-3);
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+
+	.breadcrumb a {
+		color: var(--primary);
+		text-decoration: none;
+	}
+
+	.breadcrumb a:hover {
+		text-decoration: underline;
+	}
+
+	.article {
+		background: var(--surface-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--radius-md);
+		padding: 1.25rem;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.post-meta {
+		margin-bottom: 0.25rem;
+		display: flex;
+		gap: 0.4rem;
+		align-items: center;
+	}
+
+	.taxonomy {
+		margin: 0 0 0.8rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+	}
+
+	.tax-item {
+		display: inline-flex;
+		padding: 0.2rem 0.5rem;
+		font-size: 0.8rem;
+		border: 1px solid var(--border-1);
+		border-radius: 999px;
+		color: var(--text-3);
+	}
+
+	.tax-item--category {
+		color: var(--primary-600);
+		border-color: var(--primary-soft);
+		background: var(--primary-soft);
+	}
+
+	.lead {
+		margin: 0 0 1rem;
+		color: var(--text-2);
+		font-size: 1.1rem;
+	}
+
+	.cover-wrap {
+		margin: 1rem 0 1.3rem;
+	}
+
+	.article-footer {
+		margin-top: 1.25rem;
+	}
+
+	.quick-nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.quick-nav a {
+		color: var(--primary);
+		font-weight: 500;
+		text-decoration: none;
+	}
+
+	.quick-nav a:hover {
+		text-decoration: underline;
+	}
+
+	.related h2 {
+		margin: 1.25rem 0 0.6rem;
+		font-size: 1.1rem;
+		color: var(--text-1);
+	}
+
+	.related-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 0.65rem;
+	}
+
+	.related-item {
+		margin: 0;
+	}
+
+	.related-link {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding: 0.8rem 0.9rem;
+		border: 1px solid var(--border-1);
+		border-radius: var(--radius-sm);
+		background: var(--surface-1);
+		text-decoration: none;
+	}
+
+	.related-link:hover {
+		border-color: var(--border-2);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.related-title {
+		color: var(--text-1);
+		font-weight: 600;
+	}
+
+	.related-meta {
+		color: var(--text-3);
+		font-size: 0.85rem;
+	}
+</style>
