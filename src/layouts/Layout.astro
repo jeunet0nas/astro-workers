@@ -29,11 +29,15 @@ const dynamicPageNav = (await getCollection('pages'))
 	}));
 
 const systemNav = (await getCollection('sitePages'))
-	.filter((entry) => ['home', 'blog'].includes(entry.id.toLowerCase()))
 	.filter((entry) => entry.data.showInHeader !== false)
 	.sort((a, b) => (a.data.navOrder ?? 10) - (b.data.navOrder ?? 10))
 	.map((entry) => ({
-		href: entry.id.toLowerCase() === 'home' ? '/' : '/blog',
+		href:
+			entry.id.toLowerCase() === 'home'
+				? '/'
+				: entry.id.toLowerCase() === 'blog'
+					? '/blog'
+					: `/site/${entry.id}`,
 		label: entry.data.navLabel?.trim() || entry.data.pageTitle,
 	}));
 
@@ -214,6 +218,71 @@ const nav = [...systemNav, ...dynamicPageNav, ...coreNav];
 		max-width: none;
 		margin: 0;
 		padding: 0;
+	}
+
+	.landing-section {
+		padding: clamp(2.25rem, 6vw, 4rem) 1.25rem;
+		background: var(--bg-page);
+	}
+
+	.landing-section--soft {
+		background: color-mix(in srgb, var(--surface-2) 76%, #eff6ff);
+	}
+
+	.landing-shell {
+		max-width: min(100% - 2rem, 72rem);
+		margin: 0 auto;
+	}
+
+	.landing-title {
+		margin: 0;
+		font-size: clamp(1.5rem, 3.8vw, 2rem);
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+		color: var(--text-1);
+	}
+
+	.landing-lead {
+		margin: 0.8rem 0 0;
+		max-width: 58ch;
+		color: var(--text-3);
+		font-size: 1rem;
+	}
+
+	.landing-actions {
+		margin-top: 1rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.65rem;
+	}
+
+	.landing-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.62rem 1.1rem;
+		border-radius: 999px;
+		font-size: 0.92rem;
+		font-weight: 600;
+		text-decoration: none;
+		border: 1px solid transparent;
+	}
+
+	.landing-btn--primary {
+		color: white;
+		background: var(--primary);
+	}
+
+	.landing-btn--ghost {
+		color: white;
+		border-color: rgba(255, 255, 255, 0.8);
+		background: color-mix(in srgb, #0f172a 24%, transparent);
+	}
+
+	.landing-btn--ghost-dark {
+		color: var(--text-1);
+		border-color: var(--border-2);
+		background: color-mix(in srgb, white 75%, transparent);
 	}
 
 	.prose {

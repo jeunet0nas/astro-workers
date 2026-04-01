@@ -1,0 +1,44 @@
+---
+import HeroSection from './HeroSection.astro';
+import ServicesSection from './ServicesSection.astro';
+import TextImageSection from './TextImageSection.astro';
+import PartnersSection from './PartnersSection.astro';
+import CtaSection from './CtaSection.astro';
+import type { PageSection } from './Section.types';
+
+interface Props {
+	sections?: PageSection[];
+}
+
+const { sections = [] } = Astro.props;
+const validSections = Array.isArray(sections)
+	? sections.filter(
+			(section): section is PageSection =>
+				Boolean(section) &&
+				typeof section === 'object' &&
+				'type' in section &&
+				typeof section.type === 'string'
+		)
+	: [];
+---
+
+{
+	validSections.map((section) => {
+		if (section.type === 'hero') {
+			return <HeroSection section={section} />;
+		}
+		if (section.type === 'services') {
+			return <ServicesSection section={section} />;
+		}
+		if (section.type === 'textImage') {
+			return <TextImageSection section={section} />;
+		}
+		if (section.type === 'partners') {
+			return <PartnersSection section={section} />;
+		}
+		if (section.type === 'cta') {
+			return <CtaSection section={section} />;
+		}
+		return null;
+	})
+}

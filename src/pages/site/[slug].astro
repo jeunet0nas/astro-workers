@@ -1,0 +1,42 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, getEntry, render } from 'astro:content';
+import SiteSectionRenderer from '../../components/sections/SiteSectionRenderer.astro';
+import type { PageSection } from '../../components/sections/Section.types';
+
+export async function getStaticPaths() {
+	const entries = await getCollection('sitePages');
+	return entries
+		.filter((entry) => !['home', 'blog'].includes(entry.id.toLowerCase()))
+		.map((entry) => ({ params: { slug: entry.id } }));
+}
+
+const { slug } = Astro.params;
+if (!slug) {
+	throw new Error('Missing site page slug.');
+}
+
+const entry = await getEntry('sitePages', slug);
+if (!entry) {
+	return Astro.redirect('/404');
+}
+
+const { Content } = await render(entry);
+const isValidSection = (value: unknown): value is PageSection =>
+	Boolean(value) &&
+	typeof value === 'object' &&
+	'type' in value &&
+	typeof (value as { type?: unknown }).type === 'string';
+const sections = Array.isArray(entry.data.sections) ? entry.data.sections.filter(isValidSection) : [];
+---
+
+<Layout title={entry.data.pageTitle} description={entry.data.pageDescription} wideMain>
+	{sections.length > 0 && <SiteSectionRenderer sections={sections} />}
+	<section class="landing-section">
+		<div class="landing-shell">
+			<article class="prose">
+				<Content />
+			</article>
+		</div>
+	</section>
+</Layout>

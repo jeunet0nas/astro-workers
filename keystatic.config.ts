@@ -10,6 +10,71 @@ const pageImageOpts = {
 	publicPath: '../../assets/images/pages/',
 };
 
+const pageSectionsField = fields.array(
+	fields.object(
+		{
+			type: fields.select({
+				label: 'Section type',
+				options: [
+					{ label: 'Hero', value: 'hero' },
+					{ label: 'Services', value: 'services' },
+					{ label: 'Text + Image', value: 'textImage' },
+					{ label: 'Partners', value: 'partners' },
+					{ label: 'CTA', value: 'cta' },
+				],
+				defaultValue: 'hero',
+			}),
+			title: fields.text({ label: 'Title', multiline: true }),
+			lead: fields.text({ label: 'Lead/Description', multiline: true }),
+			backgroundImage: fields.image({
+				label: 'Background image',
+				...pageImageOpts,
+			}),
+			image: fields.image({
+				label: 'Section image',
+				...pageImageOpts,
+			}),
+			overlayOpacity: fields.number({
+				label: 'Overlay opacity (0-1)',
+				defaultValue: 0.45,
+				validation: { min: 0, max: 1, step: 0.05 },
+			}),
+			primaryCtaLabel: fields.text({ label: 'Primary CTA label' }),
+			primaryCtaHref: fields.text({ label: 'Primary CTA href' }),
+			secondaryCtaLabel: fields.text({ label: 'Secondary CTA label' }),
+			secondaryCtaHref: fields.text({ label: 'Secondary CTA href' }),
+			items: fields.array(
+				fields.object(
+					{
+						title: fields.text({ label: 'Item title' }),
+						description: fields.text({ label: 'Item description', multiline: true }),
+						href: fields.text({ label: 'Link (optional)' }),
+						logo: fields.image({
+							label: 'Logo/Image (optional)',
+							...pageImageOpts,
+						}),
+					},
+					{ label: 'Section item' }
+				),
+				{
+					label: 'Items',
+					itemLabel: (props) => props.value?.title || 'Item',
+				}
+			),
+			alignImageRight: fields.checkbox({
+				label: 'Text + image: place image on right',
+				defaultValue: true,
+			}),
+		},
+		{ label: 'Page section' }
+	),
+	{
+		label: 'Sections',
+		itemLabel: (props) =>
+			`${props.value?.type || 'section'}: ${props.value?.title || 'Untitled'}`,
+	}
+);
+
 /**
  * Get environment variables from the appropriate source.
  * In Cloudflare Workers runtime, use cloudflare:workers.
@@ -282,6 +347,16 @@ export default config({
 				primaryCtaHref: fields.text({ label: 'Primary CTA href' }),
 				secondaryCtaLabel: fields.text({ label: 'Secondary CTA label' }),
 				secondaryCtaHref: fields.text({ label: 'Secondary CTA href' }),
+				heroBackgroundImage: fields.image({
+					label: 'Hero background image',
+					...pageImageOpts,
+				}),
+				heroOverlayOpacity: fields.number({
+					label: 'Hero overlay opacity (0-1)',
+					defaultValue: 0.45,
+					validation: { min: 0, max: 1, step: 0.05 },
+				}),
+				sections: pageSectionsField,
 				content: fields.markdoc({
 					label: 'Body content',
 					options: { image: pageImageOpts },

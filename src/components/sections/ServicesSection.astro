@@ -1,0 +1,70 @@
+---
+import type { PageSection } from './Section.types';
+
+interface Props {
+	section: PageSection;
+}
+
+const { section } = Astro.props;
+const items = section.items ?? [];
+---
+
+<section class="landing-section">
+	<div class="landing-shell">
+		{section.title && <h2 class="landing-title">{section.title}</h2>}
+		{section.lead && <p class="landing-lead">{section.lead}</p>}
+		{items.length > 0 && (
+			<ul class="service-grid">
+				{items.map((item) => (
+					<li>
+						{item.href ? (
+							<a class="service-card" href={item.href}>
+								<strong>{item.title}</strong>
+								{item.description && <span>{item.description}</span>}
+							</a>
+						) : (
+							<div class="service-card">
+								<strong>{item.title}</strong>
+								{item.description && <span>{item.description}</span>}
+							</div>
+						)}
+					</li>
+				))}
+			</ul>
+		)}
+	</div>
+</section>
+
+<style>
+	.service-grid {
+		list-style: none;
+		margin: 1.25rem 0 0;
+		padding: 0;
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	}
+
+	.service-card {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 1rem;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-1);
+		background: var(--surface-1);
+		text-decoration: none;
+		color: inherit;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.service-card strong {
+		color: var(--text-1);
+	}
+
+	.service-card span {
+		color: var(--text-3);
+		font-size: 0.94rem;
+	}
+</style>

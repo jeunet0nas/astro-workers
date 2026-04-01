@@ -1,0 +1,39 @@
+---
+import type { PageSection } from './Section.types';
+
+interface Props {
+	section: PageSection;
+}
+
+const { section } = Astro.props;
+---
+
+<section class="landing-section">
+	<div class="landing-shell cta-box">
+		{section.title && <h2 class="landing-title">{section.title}</h2>}
+		{section.lead && <p class="landing-lead">{section.lead}</p>}
+		{(section.primaryCtaLabel || section.secondaryCtaLabel) && (
+			<div class="landing-actions">
+				{section.primaryCtaLabel && section.primaryCtaHref && (
+					<a class="landing-btn landing-btn--primary" href={section.primaryCtaHref}>
+						{section.primaryCtaLabel}
+					</a>
+				)}
+				{section.secondaryCtaLabel && section.secondaryCtaHref && (
+					<a class="landing-btn landing-btn--ghost-dark" href={section.secondaryCtaHref}>
+						{section.secondaryCtaLabel}
+					</a>
+				)}
+			</div>
+		)}
+	</div>
+</section>
+
+<style>
+	.cta-box {
+		padding: clamp(1.25rem, 4vw, 2rem);
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--border-1);
+		background: linear-gradient(145deg, var(--surface-1), var(--primary-soft));
+	}
+</style>

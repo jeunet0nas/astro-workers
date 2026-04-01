@@ -1,0 +1,69 @@
+---
+import type { PageSection } from './Section.types';
+
+interface Props {
+	section: PageSection;
+}
+
+const { section } = Astro.props;
+const overlay = typeof section.overlayOpacity === 'number' ? section.overlayOpacity : 0.45;
+const hasBackground = Boolean(section.backgroundImage?.src);
+const styleValue = hasBackground
+	? `--hero-bg:url(${section.backgroundImage?.src});--hero-overlay:${overlay};`
+	: undefined;
+---
+
+<section class="landing-hero" style={styleValue}>
+	<div class="landing-shell landing-hero-inner">
+		{section.title && <h1>{section.title}</h1>}
+		{section.lead && <p>{section.lead}</p>}
+		{(section.primaryCtaLabel || section.secondaryCtaLabel) && (
+			<div class="landing-actions">
+				{section.primaryCtaLabel && section.primaryCtaHref && (
+					<a class="landing-btn landing-btn--primary" href={section.primaryCtaHref}>
+						{section.primaryCtaLabel}
+					</a>
+				)}
+				{section.secondaryCtaLabel && section.secondaryCtaHref && (
+					<a class="landing-btn landing-btn--ghost" href={section.secondaryCtaHref}>
+						{section.secondaryCtaLabel}
+					</a>
+				)}
+			</div>
+		)}
+	</div>
+</section>
+
+<style>
+	.landing-hero {
+		position: relative;
+		padding: clamp(3rem, 8vw, 5rem) 1.25rem;
+		color: #f8fafc;
+		background:
+			linear-gradient(
+				rgba(15, 23, 42, var(--hero-overlay, 0.45)),
+				rgba(15, 23, 42, var(--hero-overlay, 0.45))
+			),
+			var(--hero-bg),
+			linear-gradient(135deg, #0f172a, #1e3a8a);
+		background-size: cover;
+		background-position: center;
+	}
+
+	.landing-hero-inner {
+		max-width: 54rem;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(2rem, 5.2vw, 3rem);
+		line-height: 1.15;
+		letter-spacing: -0.02em;
+	}
+
+	p {
+		margin: 1rem 0 0;
+		font-size: 1.1rem;
+		max-width: 45rem;
+	}
+</style>

@@ -25,9 +25,9 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 ---
 
 <Layout title={blogTitle} description={blogDescription}>
-	<section class="blog-head">
-		<p class="blog-kicker">Tech Journal</p>
-		<h1>{blogTitle}</h1>
+	<section class="blog-head panel">
+		<p class="blog-kicker">Blogs</p>
+		<h1 class="blog-title">{blogTitle}</h1>
 		{Content && (
 			<article class="prose intro">
 				<Content />
@@ -35,26 +35,10 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 		)}
 	</section>
 
-	{latestPosts.length > 0 && (
-		<section class="latest-wrap" aria-label="Bài mới nhất">
-			<h2 class="section-title">Mới nhất</h2>
-			<ul class="latest-row">
-				{latestPosts.map((post) => (
-					<li>
-						<a href={`/blog/${post.id}`} class="latest-link">
-							<span class="latest-title">{post.data.title}</span>
-							<span class="latest-meta">{post.data.publishDate.toLocaleDateString('vi-VN')}</span>
-						</a>
-					</li>
-				))}
-			</ul>
-		</section>
-	)}
-
 	{featuredPost && (
-		<section aria-label="Bài nổi bật" class="featured-wrap">
+		<section aria-label="Bài nổi bật" class="featured-wrap panel">
 			<a class="featured-post" href={`/blog/${featuredPost.id}`}>
-				<p class="badge">Bài nổi bật</p>
+				<p class="badge">Featured</p>
 				<h2>{featuredPost.data.title}</h2>
 				{featuredPost.data.category && <p class="category">{featuredPost.data.category}</p>}
 				<p class="summary">{featuredPost.data.summary ?? 'Nhấn để đọc bài viết chi tiết.'}</p>
@@ -70,7 +54,25 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 		</section>
 	)}
 
-	<section class="filters-wrap" aria-label="Bộ lọc nội dung">
+	{latestPosts.length > 0 && (
+		<section class="latest-wrap panel" aria-label="Bài mới nhất">
+			<h2 class="section-title">Bài mới nhất</h2>
+			<ul class="latest-row">
+				{latestPosts.map((post) => (
+					<li>
+						<a href={`/blog/${post.id}`} class="latest-link">
+							<span class="latest-title">{post.data.title}</span>
+							<span class="latest-meta">
+								{post.data.publishDate.toLocaleDateString('vi-VN')} · {getReadingTime(post)} phút đọc
+							</span>
+						</a>
+					</li>
+				))}
+			</ul>
+		</section>
+	)}
+
+	<section class="filters-wrap panel" aria-label="Bộ lọc nội dung">
 		<p class="filter-label">Lọc nhanh</p>
 		<div class="chip-group">
 			<button type="button" class="chip is-active" data-filter-kind="all" data-filter-value="all">
@@ -89,7 +91,7 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 		</div>
 	</section>
 
-	<section aria-label="Danh sách bài viết">
+	<section aria-label="Danh sách bài viết" class="panel">
 		<p id="empty-state" class="empty-state" hidden>
 			Không có bài phù hợp với bộ lọc hiện tại. <a href="/blog">Xem lại toàn bộ bài viết</a>.
 		</p>
@@ -101,17 +103,15 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 					data-tags={(post.data.tags ?? []).map((tag) => tag.toLowerCase()).join(',')}
 				>
 					<a href={`/blog/${post.id}`} class="post-link">
-						<h2>{post.data.title}</h2>
-						{post.data.category && <p class="category">{post.data.category}</p>}
-						<p class="summary">{post.data.summary ?? 'Bài viết mới cập nhật trong chuyên mục blog.'}</p>
-						{post.data.tags && post.data.tags.length > 0 && (
-							<p class="tag-row">{post.data.tags.slice(0, 3).join(' · ')}</p>
-						)}
 						<p class="meta-line">
+							{post.data.category && <span class="category">{post.data.category}</span>}
 							<span>{post.data.publishDate.toLocaleDateString('vi-VN')}</span>
 							<span>·</span>
 							<span>{getReadingTime(post)} phút đọc</span>
 						</p>
+						<h2>{post.data.title}</h2>
+						<p class="summary">{post.data.summary ?? 'Bài viết mới cập nhật trong chuyên mục blog.'}</p>
+						<span class="read-more">Đọc tiếp →</span>
 					</a>
 				</li>
 			))}
@@ -156,14 +156,23 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 </Layout>
 
 <style>
+	.panel {
+		background: var(--surface-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--radius-md);
+		padding: 1.1rem;
+		box-shadow: var(--shadow-sm);
+		margin-bottom: 1rem;
+	}
+
 	.section-title {
-		margin: 0 0 0.75rem;
-		font-size: 1.05rem;
+		margin: 0 0 0.8rem;
+		font-size: 1.2rem;
 		color: var(--text-1);
 	}
 
 	.blog-head {
-		margin-bottom: 1.75rem;
+		margin-bottom: 1rem;
 	}
 
 	.blog-kicker {
@@ -175,12 +184,14 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 		text-transform: uppercase;
 	}
 
-	.intro {
-		margin-top: 0.5rem;
+	.blog-title {
+		margin: 0;
+		font-size: clamp(1.9rem, 4vw, 2.5rem);
+		line-height: 1.15;
 	}
 
-	.latest-wrap {
-		margin-bottom: 1.2rem;
+	.intro {
+		margin-top: 0.5rem;
 	}
 
 	.latest-row {
@@ -193,13 +204,12 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 	}
 
 	.latest-link {
-		display: flex;
-		justify-content: space-between;
-		gap: 0.8rem;
-		padding: 0.65rem 0.8rem;
+		display: grid;
+		gap: 0.25rem;
+		padding: 0.8rem 0.9rem;
 		border-radius: var(--radius-sm);
 		border: 1px solid var(--border-1);
-		background: var(--surface-1);
+		background: color-mix(in srgb, var(--surface-2) 70%, white);
 		text-decoration: none;
 	}
 
@@ -212,10 +222,6 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 		color: var(--text-3);
 		font-size: 0.85rem;
 		white-space: nowrap;
-	}
-
-	.featured-wrap {
-		margin-bottom: 1.25rem;
 	}
 
 	.featured-post {
@@ -268,15 +274,11 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 	.meta-line {
 		margin: 0;
 		color: var(--text-3);
-		font-size: 0.9rem;
+		font-size: 0.84rem;
 		display: flex;
 		gap: 0.4rem;
 		align-items: center;
 		flex-wrap: wrap;
-	}
-
-	.filters-wrap {
-		margin: 0 0 1rem;
 	}
 
 	.filter-label {
@@ -324,15 +326,9 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 		list-style: none;
 		padding: 0;
 		margin: 0;
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: 0.9rem;
-	}
-
-	@media (min-width: 760px) {
-		.blog-grid {
-			grid-template-columns: 1fr 1fr;
-		}
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
 	}
 
 	.post-card {
@@ -342,8 +338,8 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 	.post-link {
 		display: block;
 		height: 100%;
-		padding: 1rem;
-		border-radius: var(--radius-md);
+		padding: 1rem 1.1rem;
+		border-radius: var(--radius-sm);
 		border: 1px solid var(--border-1);
 		background: var(--surface-1);
 		text-decoration: none;
@@ -354,10 +350,24 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 			border-color 0.15s ease;
 	}
 
+	.post-link h2 {
+		margin: 0.3rem 0 0.5rem;
+		font-size: 1.15rem;
+		color: var(--text-1);
+	}
+
 	.post-link:hover,
 	.featured-post:hover {
 		border-color: var(--border-2);
 		box-shadow: var(--shadow-md);
 		transform: translateY(-2px);
+	}
+
+	.read-more {
+		display: inline-block;
+		margin-top: 0.4rem;
+		color: var(--primary);
+		font-weight: 600;
+		font-size: 0.9rem;
 	}
 </style>

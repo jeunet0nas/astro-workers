@@ -1,0 +1,59 @@
+---
+import type { PageSection } from './Section.types';
+
+interface Props {
+	section: PageSection;
+}
+
+const { section } = Astro.props;
+const isRight = section.alignImageRight !== false;
+---
+
+<section class="landing-section">
+	<div class:list={['landing-shell', 'split', isRight && 'split--right']}>
+		<div class="split-copy">
+			{section.title && <h2 class="landing-title">{section.title}</h2>}
+			{section.lead && <p class="landing-lead">{section.lead}</p>}
+			{section.primaryCtaLabel && section.primaryCtaHref && (
+				<a class="landing-btn landing-btn--primary" href={section.primaryCtaHref}>
+					{section.primaryCtaLabel}
+				</a>
+			)}
+		</div>
+		{section.image?.src && (
+			<div class="split-media">
+				<img src={section.image.src} alt={section.title ?? 'Section image'} loading="lazy" />
+			</div>
+		)}
+	</div>
+</section>
+
+<style>
+	.split {
+		display: grid;
+		gap: 1rem;
+		align-items: center;
+	}
+
+	@media (min-width: 900px) {
+		.split {
+			grid-template-columns: 1.1fr 1fr;
+		}
+
+		.split.split--right .split-copy {
+			order: 1;
+		}
+
+		.split.split--right .split-media {
+			order: 2;
+		}
+	}
+
+	.split-media img {
+		width: 100%;
+		height: auto;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-1);
+		box-shadow: var(--shadow-md);
+	}
+</style>

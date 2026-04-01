@@ -31,7 +31,7 @@ const pages = defineCollection({
 
 const sitePages = defineCollection({
 	loader: glob({ pattern: '**/*.mdoc', base: './src/content/site-pages' }),
-	schema: () =>
+	schema: ({ image }) =>
 		z.object({
 			key: z.string(),
 			pageTitle: z.string(),
@@ -45,6 +45,35 @@ const sitePages = defineCollection({
 			primaryCtaHref: z.string().optional(),
 			secondaryCtaLabel: z.string().optional(),
 			secondaryCtaHref: z.string().optional(),
+			heroBackgroundImage: image().optional(),
+			heroOverlayOpacity: z.number().min(0).max(1).optional(),
+			sections: z
+				.array(
+					z.object({
+						type: z.enum(['hero', 'services', 'textImage', 'partners', 'cta']),
+						title: z.string().optional(),
+						lead: z.string().optional(),
+						backgroundImage: image().optional(),
+						image: image().optional(),
+						overlayOpacity: z.number().min(0).max(1).optional(),
+						primaryCtaLabel: z.string().optional(),
+						primaryCtaHref: z.string().optional(),
+						secondaryCtaLabel: z.string().optional(),
+						secondaryCtaHref: z.string().optional(),
+						alignImageRight: z.boolean().optional(),
+						items: z
+							.array(
+								z.object({
+									title: z.string().optional(),
+									description: z.string().optional(),
+									href: z.string().optional(),
+									logo: image().optional(),
+								})
+							)
+							.optional(),
+					})
+				)
+				.optional(),
 		}),
 });
 
