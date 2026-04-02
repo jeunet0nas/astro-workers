@@ -142,8 +142,12 @@ const storageKind: 'github' | 'local' =
 
 // Get GitHub repo from import.meta.env (injected at build time via astro.config.mjs)
 // This is required because keystatic.config runs client-side where secrets aren't available
-const githubRepo = (metaEnv.KEYSTATIC_GITHUB_REPO as string) || 
-	env.KEYSTATIC_GITHUB_REPO;
+const DEFAULT_GITHUB_REPO = 'jeunet0nas/astro-workers';
+const githubRepo =
+	(metaEnv.KEYSTATIC_GITHUB_REPO as string) ||
+	env.KEYSTATIC_GITHUB_REPO ||
+	// Repo is not secret; allow a safe production fallback to avoid blank builds.
+	(isProduction ? DEFAULT_GITHUB_REPO : undefined);
 const githubBranchPrefix = env.KEYSTATIC_GITHUB_BRANCH_PREFIX;
 
 // Log detected mode for debugging
