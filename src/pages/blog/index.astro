@@ -4,6 +4,19 @@ import { getCollection, getEntry, render } from 'astro:content';
 
 const posts = await getCollection('posts', ({ data }) => !data.draft);
 posts.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+const firstFeaturedPost = posts.find((post) => post.data.featured);
+const featuredPost = firstFeaturedPost ?? posts[0];
+const otherPosts = posts.filter((post) => post.id !== featuredPost?.id);
+const latestPosts = posts.slice(0, 3);
+const categoryOptions = [...new Set(posts.map((post) => post.data.category).filter(Boolean))] as string[];
+const tagOptions = [...new Set(posts.flatMap((post) => post.data.tags ?? []))];
+
+const estimateReadingTime = (text: string) => {
+	const words = text.trim().split(/\s+/).filter(Boolean).length;
+	return Math.max(1, Math.ceil(words / 220));
+};
+const getReadingTime = (post: (typeof posts)[number]) =>
+	post.data.readingTime ?? estimateReadingTime(post.body);
 
 const blogPage = await getEntry('sitePages', 'blog');
 const { Content } = blogPage ? await render(blogPage) : { Content: null };
@@ -12,23 +25,349 @@ const blogDescription = blogPage?.data.pageDescription ?? 'Danh sách bài viế
 ---
 
 <Layout title={blogTitle} description={blogDescription}>
-	<h1>{blogTitle}</h1>
-	{Content && (
-		<article class="prose" style="margin-bottom: 1.5rem;">
-			<Content />
-		</article>
+	<section class="blog-head panel">
+		<p class="blog-kicker">Blogs</p>
+		<h1 class="blog-title">{blogTitle}</h1>
+		{Content && (
+			<article class="prose intro">
+				<Content />
+			</article>
+		)}
+	</section>
+
+	{featuredPost && (
+		<section aria-label="Bài nổi bật" class="featured-wrap panel">
+			<a class="featured-post" href={`/blog/${featuredPost.id}`}>
+				<p class="badge">Featured</p>
+				<h2>{featuredPost.data.title}</h2>
+				{featuredPost.data.category && <p class="category">{featuredPost.data.category}</p>}
+				<p class="summary">{featuredPost.data.summary ?? 'Nhấn để đọc bài viết chi tiết.'}</p>
+				{featuredPost.data.tags && featuredPost.data.tags.length > 0 && (
+					<p class="tag-row">{featuredPost.data.tags.slice(0, 3).join(' · ')}</p>
+				)}
+				<p class="meta-line">
+					<span>{featuredPost.data.publishDate.toLocaleDateString('vi-VN')}</span>
+					<span>·</span>
+					<span>{getReadingTime(featuredPost)} phút đọc</span>
+				</p>
+			</a>
+		</section>
 	)}
-	<ul class="post-list">
-		{
-			posts.map((post) => (
-				<li>
-					<a href={`/blog/${post.id}`}>{post.data.title}</a>
-					<p class="meta">
-						{post.data.publishDate.toLocaleDateString('vi-VN')}
-						{post.data.summary ? ` · ${post.data.summary}` : ''}
-					</p>
+
+	{latestPosts.length > 0 && (
+		<section class="latest-wrap panel" aria-label="Bài mới nhất">
+			<h2 class="section-title">Bài mới nhất</h2>
+			<ul class="latest-row">
+				{latestPosts.map((post) => (
+					<li>
+						<a href={`/blog/${post.id}`} class="latest-link">
+							<span class="latest-title">{post.data.title}</span>
+							<span class="latest-meta">
+								{post.data.publishDate.toLocaleDateString('vi-VN')} · {getReadingTime(post)} phút đọc
+							</span>
+						</a>
+					</li>
+				))}
+			</ul>
+		</section>
+	)}
+
+	<section class="filters-wrap panel" aria-label="Bộ lọc nội dung">
+		<p class="filter-label">Lọc nhanh</p>
+		<div class="chip-group">
+			<button type="button" class="chip is-active" data-filter-kind="all" data-filter-value="all">
+				Tất cả
+			</button>
+			{categoryOptions.map((category) => (
+				<button type="button" class="chip" data-filter-kind="category" data-filter-value={category}>
+					{category}
+				</button>
+			))}
+			{tagOptions.map((tag) => (
+				<button type="button" class="chip chip--tag" data-filter-kind="tag" data-filter-value={tag}>
+					#{tag}
+				</button>
+			))}
+		</div>
+	</section>
+
+	<section aria-label="Danh sách bài viết" class="panel">
+		<p id="empty-state" class="empty-state" hidden>
+			Không có bài phù hợp với bộ lọc hiện tại. <a href="/blog">Xem lại toàn bộ bài viết</a>.
+		</p>
+		<ul class="blog-grid" id="blog-grid">
+			{otherPosts.map((post) => (
+				<li
+					class="post-card"
+					data-category={post.data.category?.toLowerCase() ?? ''}
+					data-tags={(post.data.tags ?? []).map((tag) => tag.toLowerCase()).join(',')}
+				>
+					<a href={`/blog/${post.id}`} class="post-link">
+						<p class="meta-line">
+							{post.data.category && <span class="category">{post.data.category}</span>}
+							<span>{post.data.publishDate.toLocaleDateString('vi-VN')}</span>
+							<span>·</span>
+							<span>{getReadingTime(post)} phút đọc</span>
+						</p>
+						<h2>{post.data.title}</h2>
+						<p class="summary">{post.data.summary ?? 'Bài viết mới cập nhật trong chuyên mục blog.'}</p>
+						<span class="read-more">Đọc tiếp →</span>
+					</a>
 				</li>
-			))
-		}
-	</ul>
+			))}
+		</ul>
+	</section>
+
+	<script>
+		const chips = Array.from(document.querySelectorAll('.chip'));
+		const cards = Array.from(document.querySelectorAll('.post-card'));
+		const emptyState = document.getElementById('empty-state');
+
+		const normalize = (value) => (value || '').toLowerCase();
+		const updateFilter = (kind, value) => {
+			let visible = 0;
+			cards.forEach((card) => {
+				if (kind === 'all') {
+					card.hidden = false;
+					visible += 1;
+					return;
+				}
+
+				const category = normalize(card.getAttribute('data-category'));
+				const tags = normalize(card.getAttribute('data-tags')).split(',').filter(Boolean);
+				const target = normalize(value);
+				const matched =
+					(kind === 'category' && category === target) || (kind === 'tag' && tags.includes(target));
+				card.hidden = !matched;
+				if (matched) visible += 1;
+			});
+
+			if (emptyState) emptyState.hidden = visible > 0;
+		};
+
+		chips.forEach((chip) => {
+			chip.addEventListener('click', () => {
+				chips.forEach((item) => item.classList.remove('is-active'));
+				chip.classList.add('is-active');
+				updateFilter(chip.dataset.filterKind || 'all', chip.dataset.filterValue || 'all');
+			});
+		});
+	</script>
 </Layout>
+
+<style>
+	.panel {
+		background: var(--surface-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--radius-md);
+		padding: 1.1rem;
+		box-shadow: var(--shadow-sm);
+		margin-bottom: 1rem;
+	}
+
+	.section-title {
+		margin: 0 0 0.8rem;
+		font-size: 1.2rem;
+		color: var(--text-1);
+	}
+
+	.blog-head {
+		margin-bottom: 1rem;
+	}
+
+	.blog-kicker {
+		margin: 0 0 0.5rem;
+		color: var(--primary-600);
+		font-weight: 700;
+		font-size: 0.8rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.blog-title {
+		margin: 0;
+		font-size: clamp(1.9rem, 4vw, 2.5rem);
+		line-height: 1.15;
+	}
+
+	.intro {
+		margin-top: 0.5rem;
+	}
+
+	.latest-row {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.55rem;
+	}
+
+	.latest-link {
+		display: grid;
+		gap: 0.25rem;
+		padding: 0.8rem 0.9rem;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-1);
+		background: color-mix(in srgb, var(--surface-2) 70%, white);
+		text-decoration: none;
+	}
+
+	.latest-title {
+		color: var(--text-1);
+		font-weight: 500;
+	}
+
+	.latest-meta {
+		color: var(--text-3);
+		font-size: 0.85rem;
+		white-space: nowrap;
+	}
+
+	.featured-post {
+		display: block;
+		padding: 1.35rem;
+		border-radius: var(--radius-md);
+		background: linear-gradient(145deg, var(--surface-1), var(--primary-soft));
+		border: 1px solid var(--border-1);
+		text-decoration: none;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.featured-post h2,
+	.post-link h2 {
+		margin: 0;
+		color: var(--text-1);
+		line-height: 1.25;
+		letter-spacing: -0.02em;
+	}
+
+	.badge {
+		margin: 0 0 0.45rem;
+		color: var(--primary-600);
+		font-size: 0.8rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	.summary {
+		margin: 0.7rem 0;
+		color: var(--text-2);
+	}
+
+	.category {
+		margin: 0.5rem 0 0;
+		font-size: 0.82rem;
+		color: var(--primary-600);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.tag-row {
+		margin: 0 0 0.5rem;
+		color: var(--text-3);
+		font-size: 0.85rem;
+	}
+
+	.meta-line {
+		margin: 0;
+		color: var(--text-3);
+		font-size: 0.84rem;
+		display: flex;
+		gap: 0.4rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.filter-label {
+		margin: 0 0 0.5rem;
+		color: var(--text-3);
+		font-size: 0.88rem;
+	}
+
+	.chip-group {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+	}
+
+	.chip {
+		padding: 0.35rem 0.65rem;
+		border: 1px solid var(--border-1);
+		border-radius: 999px;
+		background: var(--surface-1);
+		color: var(--text-2);
+		font-size: 0.82rem;
+		cursor: pointer;
+	}
+
+	.chip--tag {
+		color: var(--primary-600);
+	}
+
+	.chip:hover,
+	.chip.is-active {
+		border-color: var(--primary);
+		background: var(--primary-soft);
+	}
+
+	.empty-state {
+		margin: 0 0 0.9rem;
+		padding: 0.75rem 0.9rem;
+		border-radius: var(--radius-sm);
+		border: 1px dashed var(--border-2);
+		background: var(--surface-2);
+		color: var(--text-2);
+	}
+
+	.blog-grid {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.post-card {
+		margin: 0;
+	}
+
+	.post-link {
+		display: block;
+		height: 100%;
+		padding: 1rem 1.1rem;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-1);
+		background: var(--surface-1);
+		text-decoration: none;
+		box-shadow: var(--shadow-sm);
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease,
+			border-color 0.15s ease;
+	}
+
+	.post-link h2 {
+		margin: 0.3rem 0 0.5rem;
+		font-size: 1.15rem;
+		color: var(--text-1);
+	}
+
+	.post-link:hover,
+	.featured-post:hover {
+		border-color: var(--border-2);
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+	}
+
+	.read-more {
+		display: inline-block;
+		margin-top: 0.4rem;
+		color: var(--primary);
+		font-weight: 600;
+		font-size: 0.9rem;
+	}
+</style>

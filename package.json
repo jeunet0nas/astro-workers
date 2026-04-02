@@ -8,14 +8,15 @@
 	"scripts": {
 		"postinstall": "patch-package",
 		"dev": "astro dev",
+		"content:check": "node scripts/check-content-sync.js",
 		"build": "astro build",
 		"preview": "astro build && astro preview",
 		"astro": "astro",
 		"generate-types": "wrangler types",
-		"deploy": "astro build && wrangler deploy --config dist/server/wrangler.json",
-		"deploy:check": "node scripts/validate-deploy.js",
+		"deploy": "npm run content:check && astro build && wrangler deploy --config dist/server/wrangler.json",
+		"deploy:check": "npm run content:check && node scripts/validate-deploy.js",
 		"deploy:secrets": "node scripts/setup-secrets.js",
-		"predeploy": "node scripts/validate-deploy.js",
+		"predeploy": "npm run deploy:check",
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {

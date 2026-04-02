@@ -1,0 +1,72 @@
+---
+import type { PageSection } from './Section.types';
+
+interface Props {
+	section: PageSection;
+}
+
+const { section } = Astro.props;
+const items = section.items ?? [];
+---
+
+<section class="landing-section landing-section--soft">
+	<div class="landing-shell">
+		{section.title && <h2 class="landing-title">{section.title}</h2>}
+		{section.lead && <p class="landing-lead">{section.lead}</p>}
+		{items.length > 0 && (
+			<ul class="partner-grid">
+				{items.map((item) => (
+					<li>
+						{item.href ? (
+							<a href={item.href} class="partner-item">
+								{item.logo?.src ? (
+									<img src={item.logo.src} alt={item.title ?? 'Partner'} loading="lazy" />
+								) : (
+									<span>{item.title}</span>
+								)}
+							</a>
+						) : (
+							<div class="partner-item">
+								{item.logo?.src ? (
+									<img src={item.logo.src} alt={item.title ?? 'Partner'} loading="lazy" />
+								) : (
+									<span>{item.title}</span>
+								)}
+							</div>
+						)}
+					</li>
+				))}
+			</ul>
+		)}
+	</div>
+</section>
+
+<style>
+	.partner-grid {
+		list-style: none;
+		padding: 0;
+		margin: 1rem 0 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.partner-item {
+		min-height: 72px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.75rem;
+		border: 1px solid var(--border-1);
+		background: var(--surface-1);
+		border-radius: var(--radius-sm);
+		text-decoration: none;
+		color: var(--text-2);
+	}
+
+	.partner-item img {
+		max-width: 100%;
+		max-height: 42px;
+		object-fit: contain;
+	}
+</style>

@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getEntry, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
+import SiteSectionRenderer from '../components/sections/SiteSectionRenderer.astro';
+import type { PageSection } from '../components/sections/Section.types';
 
 const home = await getEntry('sitePages', 'home');
 const { Content } = home ? await render(home) : { Content: null };
@@ -17,6 +19,64 @@ const primaryCtaLabel = home?.data.primaryCtaLabel ?? 'Khám phá blog';
 const primaryCtaHref = home?.data.primaryCtaHref ?? '/blog';
 const secondaryCtaLabel = home?.data.secondaryCtaLabel ?? 'Giới thiệu';
 const secondaryCtaHref = home?.data.secondaryCtaHref ?? '/about';
+const heroOverlayOpacity = home?.data.heroOverlayOpacity ?? 0.45;
+const posts = await getCollection('posts', ({ data }) => !data.draft);
+posts.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+const latestPosts = posts.slice(0, 3);
+const topicCounts = new Map<string, number>();
+for (const post of posts) {
+	for (const tag of post.data.tags ?? []) {
+		topicCounts.set(tag, (topicCounts.get(tag) ?? 0) + 1);
+	}
+}
+const trendingTopics = [...topicCounts.entries()]
+	.sort((a, b) => b[1] - a[1])
+	.slice(0, 6);
+
+const isValidSection = (value: unknown): value is PageSection =>
+	Boolean(value) &&
+	typeof value === 'object' &&
+	'type' in value &&
+	typeof (value as { type?: unknown }).type === 'string';
+
+const defaultSections: PageSection[] = [
+	{
+		type: 'hero',
+		title: heroTitle,
+		lead: heroLead,
+		backgroundImage: home?.data.heroBackgroundImage ? { src: home.data.heroBackgroundImage.src } : undefined,
+		overlayOpacity: heroOverlayOpacity,
+		primaryCtaLabel,
+		primaryCtaHref,
+		secondaryCtaLabel,
+		secondaryCtaHref,
+	},
+	{
+		type: 'services',
+		title: 'Our Services',
+		lead: 'Dich vu co the duoc chinh sua trong Keystatic de tao landing page nhanh va dong nhat.',
+		items: [
+			{ title: 'IT Consultant Services', description: 'Tu van he thong va toi uu quy trinh trien khai.' },
+			{ title: 'IT Recruitment Services', description: 'Ket noi nhanh doi ngu ky su phu hop du an.' },
+			{ title: 'Business Application Services', description: 'Xay dung ung dung ho tro van hanh doanh nghiep.' },
+			{ title: 'Sourcing & Staffing Services', description: 'Bo sung nguon luc linh hoat cho team phat trien.' },
+		],
+	},
+	{
+		type: 'cta',
+		title: 'San sang bat dau du an moi?',
+		lead: 'Su dung Keystatic de tao section va cap nhat noi dung ma khong can sua code frontend.',
+		primaryCtaLabel: 'Lien he tu van',
+		primaryCtaHref: '/contact',
+		secondaryCtaLabel: 'Xem blog',
+		secondaryCtaHref: '/blog',
+	},
+];
+
+const cmsSections = Array.isArray(home?.data.sections)
+	? home.data.sections.filter(isValidSection)
+	: [];
+const pageSections = cmsSections.length > 0 ? cmsSections : defaultSections;
 ---
 
 <Layout
@@ -24,19 +84,9 @@ const secondaryCtaHref = home?.data.secondaryCtaHref ?? '/about';
 	description={pageDescription}
 	wideMain
 >
-	<section class="hero" aria-label="Giới thiệu">
-		<div class="hero-inner">
-			<p class="hero-breadcrumb"><a href="/">Trang chủ</a></p>
-			<h1 class="hero-title">{heroTitle}</h1>
-			<p class="hero-lead">{heroLead}</p>
-			<div class="hero-actions">
-				<a class="btn btn--light" href={primaryCtaHref}>{primaryCtaLabel}</a>
-				<a class="btn btn--ghost" href={secondaryCtaHref}>{secondaryCtaLabel}</a>
-			</div>
-		</div>
-	</section>
+	<SiteSectionRenderer sections={pageSections} />
 
-	<div class="page-body">
+	<div class="page-body landing-shell">
 		<section class="section panel" aria-labelledby="section-explore">
 			{Content ? (
 				<article class="prose">
@@ -66,104 +116,48 @@ const secondaryCtaHref = home?.data.secondaryCtaHref ?? '/about';
 				</li>
 			</ul>
 		</section>
+
+		{latestPosts.length > 0 && (
+			<section class="section panel" aria-labelledby="latest-posts">
+				<h2 id="latest-posts" class="section-title">Bài viết mới nhất</h2>
+				<ul class="latest-grid">
+					{latestPosts.map((post) => (
+						<li>
+							<a href={`/blog/${post.id}`} class="latest-card">
+								<span class="latest-card-title">{post.data.title}</span>
+								<span class="latest-card-meta">
+									{post.data.category ?? 'Blog'} · {post.data.publishDate.toLocaleDateString('vi-VN')}
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</section>
+		)}
+
+		{trendingTopics.length > 0 && (
+			<section class="section panel" aria-labelledby="trending-topics">
+				<h2 id="trending-topics" class="section-title">Chủ đề nổi bật</h2>
+				<div class="topic-row">
+					{trendingTopics.map(([topic, count]) => (
+						<a href="/blog" class="topic-chip">
+							#{topic} <span>{count}</span>
+						</a>
+					))}
+				</div>
+			</section>
+		)}
 	</div>
 </Layout>
 
 <style>
-	.hero {
-		background: linear-gradient(135deg, var(--color-hero) 0%, var(--color-hero-deep) 100%);
-		color: white;
-		padding: 2.5rem 1.5rem 3.5rem;
-		box-shadow: var(--shadow-soft);
-	}
-
-	.hero-inner {
-		max-width: 42rem;
-		margin: 0 auto;
-	}
-
-	.hero-breadcrumb {
-		margin: 0 0 1rem;
-		font-size: 0.875rem;
-		opacity: 0.92;
-	}
-
-	.hero-breadcrumb a {
-		color: white;
-		text-decoration: none;
-		font-weight: 500;
-	}
-
-	.hero-breadcrumb a:hover {
-		text-decoration: underline;
-	}
-
-	.hero-title {
-		margin: 0;
-		font-size: clamp(1.85rem, 5vw, 2.5rem);
-		font-weight: 700;
-		line-height: 1.15;
-		letter-spacing: -0.03em;
-	}
-
-	.hero-lead {
-		margin: 1.25rem 0 0;
-		font-size: 1.0625rem;
-		line-height: 1.65;
-		opacity: 0.95;
-		max-width: 36rem;
-	}
-
-	.hero-actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-		margin-top: 1.75rem;
-	}
-
-	.btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.65rem 1.35rem;
-		font-size: 0.9375rem;
-		font-weight: 600;
-		font-family: inherit;
-		border-radius: 999px;
-		text-decoration: none;
-		transition:
-			background 0.15s ease,
-			color 0.15s ease,
-			box-shadow 0.15s ease;
-	}
-
-	.btn--light {
-		background: white;
-		color: var(--accent);
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-	}
-
-	.btn--light:hover {
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
-	}
-
-	.btn--ghost {
-		background: transparent;
-		color: white;
-		border: 2px solid rgba(255, 255, 255, 0.85);
-	}
-
-	.btn--ghost:hover {
-		background: rgba(255, 255, 255, 0.15);
-	}
-
 	.page-body {
-		background: var(--bg);
+		background: var(--bg-page);
 		padding: 2.5rem 1.25rem 4rem;
 	}
 
 	.section {
-		max-width: 42rem;
+		max-width: 54rem;
 		margin: 0 auto;
 	}
 
@@ -182,7 +176,7 @@ const secondaryCtaHref = home?.data.secondaryCtaHref ?? '/about';
 
 	.section-text {
 		margin: 0 0 1rem;
-		color: var(--muted);
+		color: var(--text-3);
 		font-size: 1.0625rem;
 		line-height: 1.7;
 	}
@@ -206,24 +200,92 @@ const secondaryCtaHref = home?.data.secondaryCtaHref ?? '/about';
 		}
 	}
 
+	.latest-grid {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.8rem;
+	}
+
+	@media (min-width: 760px) {
+		.latest-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	.latest-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 1rem;
+		border: 1px solid var(--border-1);
+		border-radius: var(--radius-md);
+		background: var(--surface-1);
+		text-decoration: none;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.latest-card:hover {
+		border-color: var(--border-2);
+		box-shadow: var(--shadow-md);
+	}
+
+	.latest-card-title {
+		color: var(--text-1);
+		font-weight: 600;
+	}
+
+	.latest-card-meta {
+		color: var(--text-3);
+		font-size: 0.85rem;
+	}
+
+	.topic-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.topic-chip {
+		display: inline-flex;
+		gap: 0.35rem;
+		align-items: center;
+		padding: 0.35rem 0.65rem;
+		border-radius: 999px;
+		border: 1px solid var(--border-1);
+		background: var(--surface-1);
+		color: var(--primary-600);
+		text-decoration: none;
+		font-size: 0.84rem;
+	}
+
+	.topic-chip span {
+		color: var(--text-3);
+	}
+
 	.tile-link {
 		display: flex;
 		flex-direction: column;
 		gap: 0.35rem;
 		padding: 1.25rem 1.35rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 12px;
+		background: var(--surface-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--radius-md);
 		text-decoration: none;
 		color: inherit;
+		box-shadow: var(--shadow-sm);
 		transition:
+			transform 0.15s ease,
 			border-color 0.15s ease,
 			box-shadow 0.15s ease;
 	}
 
 	.tile-link:hover {
-		border-color: var(--accent);
-		box-shadow: var(--shadow-soft);
+		border-color: var(--border-2);
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
 	}
 
 	.tile-link-title {
@@ -234,6 +296,6 @@ const secondaryCtaHref = home?.data.secondaryCtaHref ?? '/about';
 
 	.tile-link-desc {
 		font-size: 0.875rem;
-		color: var(--muted);
+		color: var(--text-3);
 	}
 </style>
