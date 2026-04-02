@@ -146,8 +146,8 @@ const DEFAULT_GITHUB_REPO = 'jeunet0nas/astro-workers';
 const githubRepo =
 	(metaEnv.KEYSTATIC_GITHUB_REPO as string) ||
 	env.KEYSTATIC_GITHUB_REPO ||
-	// Repo is not secret; allow a safe production fallback to avoid blank builds.
-	(isProduction ? DEFAULT_GITHUB_REPO : undefined);
+	// Repo is not secret; use a stable fallback whenever GitHub mode is selected.
+	(storageKind === 'github' ? DEFAULT_GITHUB_REPO : undefined);
 const githubBranchPrefix = env.KEYSTATIC_GITHUB_BRANCH_PREFIX;
 
 // Log detected mode for debugging
